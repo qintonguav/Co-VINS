@@ -1,0 +1,17 @@
+<launch>
+ 
+    <group ns="agent0">
+    <include file="$(find vins_estimator)/launch/agent.launch">
+        <arg name="config_path" default = "$(find feature_tracker)/../config/euroc/euroc_config.yaml" />
+        <arg name="vins_path" default = "$(find feature_tracker)/../config/../" />
+    </include>
+    </group>
+
+    <group ns="agent1">
+    <include file="$(find vins_estimator)/launch/agent.launch">
+        <arg name="config_path" default = "$(find feature_tracker)/../config/euroc/euroc_config.yaml" />
+        <arg name="vins_path" default = "$(find feature_tracker)/../config/../" />
+    </include>
+    </group>
+
+</launch>

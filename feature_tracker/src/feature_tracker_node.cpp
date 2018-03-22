@@ -206,7 +206,7 @@ void img_callback(const sensor_msgs::ImageConstPtr &img_msg)
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "feature_tracker");
-    ros::NodeHandle n("~");
+    ros::NodeHandle n;
     ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Info);
     readParameters(n);
 
@@ -230,9 +230,9 @@ int main(int argc, char **argv)
 
     ros::Subscriber sub_img = n.subscribe(IMAGE_TOPIC, 100, img_callback);
 
-    pub_img = n.advertise<sensor_msgs::PointCloud>("feature", 1000);
-    pub_match = n.advertise<sensor_msgs::Image>("feature_img",1000);
-    pub_restart = n.advertise<std_msgs::Bool>("restart",1000);
+    pub_img = n.advertise<sensor_msgs::PointCloud>("feature_tracker/feature", 1000);
+    pub_match = n.advertise<sensor_msgs::Image>("feature_tracker/feature_img",1000);
+    pub_restart = n.advertise<std_msgs::Bool>("feature_tracker/restart",1000);
     /*
     if (SHOW_TRACK)
         cv::namedWindow("vis", cv::WINDOW_NORMAL);
