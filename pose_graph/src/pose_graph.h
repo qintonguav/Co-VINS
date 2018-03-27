@@ -8,6 +8,7 @@
 #include <ceres/ceres.h>
 #include <ceres/rotation.h>
 #include <queue>
+#include <map>
 #include <assert.h>
 #include <nav_msgs/Path.h>
 #include <geometry_msgs/PointStamped.h>
@@ -39,6 +40,7 @@ public:
 	~PoseGraph();
 	void registerPub(ros::NodeHandle &n);
 	void addKeyFrame(KeyFrame* cur_kf, bool flag_detect_loop);
+	void addAgentFrame(KeyFrame* cur_kf);
 	void loadKeyFrame(KeyFrame* cur_kf, bool flag_detect_loop);
 	void loadVocabulary(std::string voc_path);
 	void updateKeyFrameLoop(int index, Eigen::Matrix<double, 8, 1 > &_loop_info);
@@ -84,6 +86,11 @@ private:
 	ros::Publisher pub_base_path;
 	ros::Publisher pub_pose_graph;
 	ros::Publisher pub_path[10];
+
+	//swarm variable
+	map<int, int> sequence_num_map;
+	map<int, Eigen::Vector3d> sequence_t_drift_map;
+	map<int, Eigen::Matrix3d> sequence_r_drift_map;
 };
 
 template <typename T>

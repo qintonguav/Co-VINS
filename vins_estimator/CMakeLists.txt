@@ -13,6 +13,9 @@ find_package(catkin REQUIRED COMPONENTS
     nav_msgs
     tf
     cv_bridge
+    camera_model
+    roslib
+    agent_msg
     )
 
 find_package(OpenCV REQUIRED)
@@ -48,9 +51,12 @@ add_executable(vins_estimator
     src/initial/initial_aligment.cpp
     src/initial/initial_sfm.cpp
     src/initial/initial_ex_rotation.cpp
+    src/ThirdParty/DUtils/Random.cpp
+    src/ThirdParty/DUtils/Timestamp.cpp
+    src/ThirdParty/DVision/BRIEF.cpp
     )
 
 
-target_link_libraries(vins_estimator ${catkin_LIBRARIES} ${OpenCV_LIBS} ${CERES_LIBRARIES}) 
+target_link_libraries(vins_estimator ${catkin_LIBRARIES} ${OpenCV_LIBS} ${CERES_LIBRARIES} dw) 
 
 

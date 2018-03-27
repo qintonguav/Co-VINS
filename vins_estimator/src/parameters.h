@@ -32,11 +32,15 @@ extern int NUM_ITERATIONS;
 extern std::string EX_CALIB_RESULT_PATH;
 extern std::string VINS_RESULT_PATH;
 extern std::string IMU_TOPIC;
+extern std::string IMAGE_TOPIC;
 extern double TD;
 extern double TR;
 extern int ESTIMATE_TD;
 extern int ROLLING_SHUTTER;
 extern double ROW, COL;
+extern int SWARM_AGENT;
+extern std::string BRIEF_PATTERN_FILE;
+extern int AGENT_NUM;
 
 
 void readParameters(ros::NodeHandle &n);

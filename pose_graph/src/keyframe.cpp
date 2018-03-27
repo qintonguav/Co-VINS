@@ -12,7 +12,7 @@ static void reduceVector(vector<Derived> &v, vector<uchar> status)
 
 // create keyframe online
 KeyFrame::KeyFrame(double _time_stamp, int _index, Vector3d &_vio_T_w_i, Matrix3d &_vio_R_w_i, cv::Mat &_image,
-		           vector<cv::Point3f> &_point_3d, vector<cv::Point2f> &_point_2d_uv, vector<cv::Point2f> &_point_2d_norm,
+		           vector<cv::Point3f> &_point_3d, vector<cv::Point2f> &_point_2d_uv, vector<cv::Point2f> &_point_2d,
 		           vector<double> &_point_id, int _sequence)
 {
 	time_stamp = _time_stamp;
@@ -27,7 +27,7 @@ KeyFrame::KeyFrame(double _time_stamp, int _index, Vector3d &_vio_T_w_i, Matrix3
 	cv::resize(image, thumbnail, cv::Size(80, 60));
 	point_3d = _point_3d;
 	point_2d_uv = _point_2d_uv;
-	point_2d_norm = _point_2d_norm;
+	point_2d = _point_2d;
 	point_id = _point_id;
 	has_loop = false;
 	loop_index = -1;
@@ -43,7 +43,7 @@ KeyFrame::KeyFrame(double _time_stamp, int _index, Vector3d &_vio_T_w_i, Matrix3
 // load previous keyframe
 KeyFrame::KeyFrame(double _time_stamp, int _index, Vector3d &_vio_T_w_i, Matrix3d &_vio_R_w_i, Vector3d &_T_w_i, Matrix3d &_R_w_i,
 					cv::Mat &_image, int _loop_index, Eigen::Matrix<double, 8, 1 > &_loop_info,
-					vector<cv::KeyPoint> &_keypoints, vector<cv::KeyPoint> &_keypoints_norm, vector<BRIEF::bitset> &_brief_descriptors)
+					vector<cv::KeyPoint> &_keypoints, vector<cv::Point2f> &_feature_2d, vector<BRIEF::bitset> &_feature_des)
 {
 	time_stamp = _time_stamp;
 	index = _index;
@@ -67,10 +67,27 @@ KeyFrame::KeyFrame(double _time_stamp, int _index, Vector3d &_vio_T_w_i, Matrix3
 	has_fast_point = false;
 	sequence = 0;
 	keypoints = _keypoints;
-	keypoints_norm = _keypoints_norm;
-	brief_descriptors = _brief_descriptors;
+	feature_2d = _feature_2d;
+	feature_des = _feature_des;
 }
 
+KeyFrame::KeyFrame(int _index, int _seq, Vector3d &_vio_T_w_c, Matrix3d &_vio_R_w_c, 
+					vector<cv::Point3f> &_point_3d, vector<cv::Point2f> &_point_2d, vector<cv::Point2f> &_feature_2d, 
+					vector<BRIEF::bitset> &_point_des, vector<BRIEF::bitset> &_feature_des)
+{
+	index = _index;
+	sequence = _seq;
+	vio_T_w_c = _vio_T_w_c;
+	vio_R_w_c = _vio_R_w_c; 
+	point_3d = _point_3d;
+	point_2d = _point_2d;
+	feature_2d = _feature_2d;
+	point_des = _point_des;
+	feature_des = _feature_des;
+	has_loop = false;
+	loop_index = -1;
+	loop_info << 0, 0, 0, 0, 0, 0, 0, 0;
+}
 
 void KeyFrame::computeWindowBRIEFPoint()
 {
@@ -81,19 +98,19 @@ void KeyFrame::computeWindowBRIEFPoint()
 	    key.pt = point_2d_uv[i];
 	    window_keypoints.push_back(key);
 	}
-	extractor(image, window_keypoints, window_brief_descriptors);
+	extractor(image, window_keypoints, point_des);
 }
 
 void KeyFrame::computeBRIEFPoint()
 {
 	BriefExtractor extractor(BRIEF_PATTERN_FILE.c_str());
 	const int fast_th = 20; // corner detector response threshold
-	if(1)
+	if(0)
 		cv::FAST(image, keypoints, fast_th, true);
 	else
 	{
 		vector<cv::Point2f> tmp_pts;
-		cv::goodFeaturesToTrack(image, tmp_pts, 500, 0.01, 10);
+		cv::goodFeaturesToTrack(image, tmp_pts, 1000, 0.01, 10);
 		for(int i = 0; i < (int)tmp_pts.size(); i++)
 		{
 		    cv::KeyPoint key;
@@ -101,14 +118,12 @@ void KeyFrame::computeBRIEFPoint()
 		    keypoints.push_back(key);
 		}
 	}
-	extractor(image, keypoints, brief_descriptors);
+	extractor(image, keypoints, feature_des);
 	for (int i = 0; i < (int)keypoints.size(); i++)
 	{
 		Eigen::Vector3d tmp_p;
 		m_camera->liftProjective(Eigen::Vector2d(keypoints[i].pt.x, keypoints[i].pt.y), tmp_p);
-		cv::KeyPoint tmp_norm;
-		tmp_norm.pt = cv::Point2f(tmp_p.x()/tmp_p.z(), tmp_p.y()/tmp_p.z());
-		keypoints_norm.push_back(tmp_norm);
+		feature_2d.push_back(cv::Point2f(tmp_p.x()/tmp_p.z(), tmp_p.y()/tmp_p.z()));
 	}
 }
 
@@ -121,7 +136,7 @@ void BriefExtractor::operator() (const cv::Mat &im, vector<cv::KeyPoint> &keys, 
 bool KeyFrame::searchInAera(const BRIEF::bitset window_descriptor,
                             const std::vector<BRIEF::bitset> &descriptors_old,
                             const std::vector<cv::KeyPoint> &keypoints_old,
-                            const std::vector<cv::KeyPoint> &keypoints_old_norm,
+                            const std::vector<cv::Point2f> &feature_2d_old,
                             cv::Point2f &best_match,
                             cv::Point2f &best_match_norm)
 {
@@ -142,7 +157,7 @@ bool KeyFrame::searchInAera(const BRIEF::bitset window_descriptor,
     if (bestIndex != -1 && bestDist < 80)
     {
       best_match = keypoints_old[bestIndex].pt;
-      best_match_norm = keypoints_old_norm[bestIndex].pt;
+      best_match_norm = feature_2d_old[bestIndex];
       return true;
     }
     else
@@ -154,13 +169,13 @@ void KeyFrame::searchByBRIEFDes(std::vector<cv::Point2f> &matched_2d_old,
                                 std::vector<uchar> &status,
                                 const std::vector<BRIEF::bitset> &descriptors_old,
                                 const std::vector<cv::KeyPoint> &keypoints_old,
-                                const std::vector<cv::KeyPoint> &keypoints_old_norm)
+                                const std::vector<cv::Point2f> &feature_2d_old)
 {
-    for(int i = 0; i < (int)window_brief_descriptors.size(); i++)
+    for(int i = 0; i < (int)point_des.size(); i++)
     {
         cv::Point2f pt(0.f, 0.f);
         cv::Point2f pt_norm(0.f, 0.f);
-        if (searchInAera(window_brief_descriptors[i], descriptors_old, keypoints_old, keypoints_old_norm, pt, pt_norm))
+        if (searchInAera(point_des[i], descriptors_old, keypoints_old, feature_2d_old, pt, pt_norm))
           status.push_back(1);
         else
           status.push_back(0);
@@ -268,7 +283,7 @@ bool KeyFrame::findConnection(KeyFrame* old_kf)
 
 	matched_3d = point_3d;
 	matched_2d_cur = point_2d_uv;
-	matched_2d_cur_norm = point_2d_norm;
+	matched_2d_cur_norm = point_2d;
 	matched_id = point_id;
 
 	TicToc t_match;
@@ -298,7 +313,7 @@ bool KeyFrame::findConnection(KeyFrame* old_kf)
 	    }
 	#endif
 	//printf("search by des\n");
-	searchByBRIEFDes(matched_2d_old, matched_2d_old_norm, status, old_kf->brief_descriptors, old_kf->keypoints, old_kf->keypoints_norm);
+	searchByBRIEFDes(matched_2d_old, matched_2d_old_norm, status, old_kf->feature_des, old_kf->keypoints, old_kf->feature_2d);
 	reduceVector(matched_2d_cur, status);
 	reduceVector(matched_2d_old, status);
 	reduceVector(matched_2d_cur_norm, status);
@@ -533,6 +548,12 @@ void KeyFrame::getVioPose(Eigen::Vector3d &_T_w_i, Eigen::Matrix3d &_R_w_i)
     _R_w_i = vio_R_w_i;
 }
 
+void KeyFrame::getVioCameraPose(Eigen::Vector3d &_T_w_c, Eigen::Matrix3d &_R_w_c)
+{
+    _T_w_c = vio_T_w_c;
+    _R_w_c = vio_R_w_c;
+}
+
 void KeyFrame::getPose(Eigen::Vector3d &_T_w_i, Eigen::Matrix3d &_R_w_i)
 {
     _T_w_i = T_w_i;
@@ -583,7 +604,6 @@ BriefExtractor::BriefExtractor(const std::string &pattern_file)
   // the object is created.
   // We load the pattern that we used to build the vocabulary, to make
   // the descriptors compatible with the predefined vocabulary
-
   // loads the pattern
   cv::FileStorage fs(pattern_file.c_str(), cv::FileStorage::READ);
   if(!fs.isOpened()) throw string("Could not open file ") + pattern_file;

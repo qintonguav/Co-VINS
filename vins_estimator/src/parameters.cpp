@@ -20,8 +20,11 @@ int ROLLING_SHUTTER;
 std::string EX_CALIB_RESULT_PATH;
 std::string VINS_RESULT_PATH;
 std::string IMU_TOPIC;
+std::string IMAGE_TOPIC;
 double ROW, COL;
 double TD, TR;
+int SWARM_AGENT;
+int AGENT_NUM;
 
 template <typename T>
 T readParam(ros::NodeHandle &n, std::string name)
@@ -50,6 +53,7 @@ void readParameters(ros::NodeHandle &n)
     }
 
     fsSettings["imu_topic"] >> IMU_TOPIC;
+    fsSettings["image_topic"] >> IMAGE_TOPIC;
 
     SOLVER_TIME = fsSettings["max_solver_time"];
     NUM_ITERATIONS = fsSettings["max_num_iterations"];
@@ -129,5 +133,12 @@ void readParameters(ros::NodeHandle &n)
         TR = 0;
     }
     
+    SWARM_AGENT = fsSettings["swarm_agent"];
+    if(SWARM_AGENT)
+    {
+        ROS_INFO_STREAM(" open swarm agent mode");
+        AGENT_NUM = readParam<int>(n, "agent_num");
+    }
+
     fsSettings.release();
 }

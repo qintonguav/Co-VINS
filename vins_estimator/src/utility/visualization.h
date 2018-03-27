@@ -18,6 +18,22 @@
 #include "../estimator.h"
 #include "../parameters.h"
 #include <fstream>
+#include <agent_msg/AgentMsg.h>
+#include "../ThirdParty/DUtils/DUtils.h"
+#include "../ThirdParty/DVision/DVision.h"
+#include "camodocal/camera_models/CameraFactory.h"
+#include "camodocal/camera_models/CataCamera.h"
+#include "camodocal/camera_models/PinholeCamera.h"
+
+using namespace DVision;
+class BriefExtractor
+{
+public:
+  virtual void operator()(const cv::Mat &im, vector<cv::KeyPoint> &keys, vector<BRIEF::bitset> &descriptors) const;
+  BriefExtractor(const std::string &pattern_file);
+
+  DVision::BRIEF m_brief;
+};
 
 extern ros::Publisher pub_odometry;
 extern ros::Publisher pub_path, pub_pose;
@@ -50,3 +66,5 @@ void pubTF(const Estimator &estimator, const std_msgs::Header &header);
 void pubKeyframe(const Estimator &estimator);
 
 void pubRelocalization(const Estimator &estimator);
+
+void pubAgentFrame(const Estimator &estimator, const cv::Mat &image, camodocal::CameraPtr m_camera);

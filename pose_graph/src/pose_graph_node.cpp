@@ -1,3 +1,9 @@
+#define BACKWARD_HAS_DW 1
+#include <backward.hpp>
+namespace backward
+{
+backward::SignalHandling sh;
+} // namespace backward
 #include <vector>
 #include <ros/ros.h>
 #include <nav_msgs/Odometry.h>
@@ -21,6 +27,8 @@
 #include "pose_graph.h"
 #include "utility/CameraPoseVisualization.h"
 #include "parameters.h"
+#include <agent_msg/AgentMsg.h>
+#include "ThirdParty/DVision/DVision.h"
 #define SKIP_FIRST_CNT 10
 using namespace std;
 
@@ -66,6 +74,10 @@ CameraPoseVisualization cameraposevisual(1, 0, 0, 1);
 Eigen::Vector3d last_t(-100, -100, -100);
 double last_image_time = -1;
 
+queue<agent_msg::AgentMsgConstPtr> agent_msg_buf;
+std::mutex m_agent_msg_buf;
+int global_index = 0;
+
 void new_sequence()
 {
     printf("new sequence\n");
@@ -88,6 +100,14 @@ void new_sequence()
     while(!odometry_buf.empty())
         odometry_buf.pop();
     m_buf.unlock();
+}
+
+void agent_callback(const agent_msg::AgentMsgConstPtr &agent_msg)
+{
+    ROS_INFO("agent frame callback");
+    m_agent_msg_buf.lock();
+    agent_msg_buf.push(agent_msg);
+    m_agent_msg_buf.unlock();
 }
 
 void image_callback(const sensor_msgs::ImageConstPtr &image_msg)
@@ -289,6 +309,112 @@ void extrinsic_callback(const nav_msgs::Odometry::ConstPtr &pose_msg)
                       pose_msg->pose.pose.orientation.y,
                       pose_msg->pose.pose.orientation.z).toRotationMatrix();
     m_process.unlock();
+}
+
+void agent_process()
+{
+    while (true)
+    {
+        agent_msg::AgentMsgConstPtr agent_msg = NULL;
+        m_agent_msg_buf.lock();
+        if (!agent_msg_buf.empty())
+        {
+            agent_msg = agent_msg_buf.front();
+            agent_msg_buf.pop();
+        }
+        m_agent_msg_buf.unlock();
+
+        if(agent_msg != NULL)
+        {
+            // build keyframe
+            int sequence_num = agent_msg->seq;
+            Vector3d T = Vector3d(agent_msg->position.x,
+                                  agent_msg->position.y,
+                                  agent_msg->position.z);
+            Matrix3d R = Quaterniond(agent_msg->orientation.w,
+                                     agent_msg->orientation.x,
+                                     agent_msg->orientation.y,
+                                     agent_msg->orientation.z).toRotationMatrix();
+
+
+            vector<cv::Point3f> point_3d;  
+            vector<cv::Point2f> point_2d;
+            vector<cv::Point2f> feature_2d;
+            vector<BRIEF::bitset> feature_descriptors, point_descriptors;
+
+            
+            for (unsigned int i = 0; i < agent_msg->point_3d.size(); i++)
+            {
+                cv::Point3f p_3d;
+                p_3d.x = agent_msg->point_3d[i].x;
+                p_3d.y = agent_msg->point_3d[i].y;
+                p_3d.z = agent_msg->point_3d[i].z;
+                point_3d.push_back(p_3d);
+            }
+            
+            for (unsigned int i = 0; i < agent_msg->point_2d.size(); i++)
+            {
+                cv::Point2f p_2d;
+                p_2d.x = agent_msg->point_2d[i].x;
+                p_2d.y = agent_msg->point_2d[i].y;
+                point_2d.push_back(p_2d);
+            }
+            
+            for (unsigned int i = 0; i < agent_msg->feature_2d.size(); i++)
+            {
+                cv::Point2f p_2d;
+                p_2d.x = agent_msg->feature_2d[i].x;
+                p_2d.y = agent_msg->feature_2d[i].y;
+                feature_2d.push_back(p_2d);
+            }
+
+            for (unsigned int i = 0; i < agent_msg->point_des.size(); i = i + 4)
+            {
+                boost::dynamic_bitset<> tmp_brief(256);
+                for (int k = 0; k < 4; k++)
+                {
+                    unsigned long long int tmp_int = agent_msg->point_des[i + k];
+                    for (int j = 0; j < 64; ++j, tmp_int >>= 1)
+                    {
+                        tmp_brief[256 - 64 * (k + 1) + j] = (tmp_int & 1);
+                    }
+                    point_descriptors.push_back(tmp_brief);
+                } 
+            } 
+
+            for (unsigned int i = 0; i < agent_msg->feature_des.size(); i = i + 4)
+            {
+                boost::dynamic_bitset<> tmp_brief(256);
+                for (int k = 0; k < 4; k++)
+                {
+                    unsigned long long int tmp_int = agent_msg->feature_des[i + k];
+                    for (int j = 0; j < 64; ++j, tmp_int >>= 1)
+                    {
+                        tmp_brief[256 - 64 * (k + 1) + j] = (tmp_int & 1);
+                    }
+                    feature_descriptors.push_back(tmp_brief);
+                } 
+                //cout << i / 4 << "  "<< tmp_brief << endl;
+            } 
+
+
+
+
+            
+            KeyFrame* keyframe = new KeyFrame(global_index, sequence_num, T, R, point_3d, point_2d, feature_2d, 
+                                             point_descriptors, feature_descriptors);   
+            global_index++;
+            // m_process.lock();
+            // start_flag = 1;
+            // posegraph.addKeyFrame(keyframe, 1);
+            // m_process.unlock();
+            // frame_index++;
+            // last_t = T;
+            
+        }
+        std::chrono::milliseconds dura(5);
+        std::this_thread::sleep_for(dura);
+    }
 }
 
 void process()
@@ -494,7 +620,12 @@ int main(int argc, char **argv)
         fsSettings["image_topic"] >> IMAGE_TOPIC;        
         fsSettings["pose_graph_save_path"] >> POSE_GRAPH_SAVE_PATH;
         fsSettings["output_path"] >> VINS_RESULT_PATH;
-        fsSettings["save_image"] >> DEBUG_IMAGE;
+        int SWARM_AGENT;
+        fsSettings["swarm_agent"] >> SWARM_AGENT;
+        if (SWARM_AGENT)
+            DEBUG_IMAGE = 0;
+        else
+            fsSettings["save_image"] >> DEBUG_IMAGE;
         VISUALIZE_IMU_FORWARD = fsSettings["visualize_imu_forward"];
         LOAD_PREVIOUS_POSE_GRAPH = fsSettings["load_previous_pose_graph"];
         FAST_RELOCALIZATION = fsSettings["fast_relocalization"];
@@ -528,6 +659,7 @@ int main(int argc, char **argv)
     ros::Subscriber sub_extrinsic = n.subscribe("/vins_estimator/extrinsic", 2000, extrinsic_callback);
     ros::Subscriber sub_point = n.subscribe("/vins_estimator/keyframe_point", 2000, point_callback);
     ros::Subscriber sub_relo_relative_pose = n.subscribe("/vins_estimator/relo_relative_pose", 2000, relo_relative_pose_callback);
+    ros::Subscriber sub_agent_msg = n.subscribe("/vins_estimator/agent_frame",2000, agent_callback);
 
     pub_match_img = n.advertise<sensor_msgs::Image>("match_image", 1000);
     pub_camera_pose_visual = n.advertise<visualization_msgs::MarkerArray>("camera_pose_visual", 1000);
@@ -537,9 +669,11 @@ int main(int argc, char **argv)
 
     std::thread measurement_process;
     std::thread keyboard_command_process;
+    std::thread agent_frame_thread;
 
     measurement_process = std::thread(process);
     keyboard_command_process = std::thread(command);
+    agent_frame_thread = std::thread(agent_process);
 
 
     ros::spin();
