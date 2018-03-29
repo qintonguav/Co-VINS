@@ -454,7 +454,7 @@ void pubAgentFrame(const Estimator &estimator, const cv::Mat &image, camodocal::
         agent_frame_msg.ric.w = tmpQ.w();
 
         vector<Eigen::Vector3d> window_points_3d;
-        vector<Eigen::Vector2d> window_points_2d;
+        //vector<Eigen::Vector2d> window_points_2d;
         vector<Eigen::Vector2d> window_points_uv;
         for (auto &it_per_id : estimator.f_manager.feature)
         {
@@ -468,7 +468,7 @@ void pubAgentFrame(const Estimator &estimator, const cv::Mat &image, camodocal::
                                       + estimator.Ps[imu_i];
                 window_points_3d.push_back(w_pts_i);
                 int imu_j = WINDOW_SIZE - 2 - it_per_id.start_frame;
-                window_points_2d.push_back(it_per_id.feature_per_frame[imu_j].point.head(2));
+                //window_points_2d.push_back(it_per_id.feature_per_frame[imu_j].point.head(2));
                 window_points_uv.push_back(it_per_id.feature_per_frame[imu_j].uv);
             }
         }        
@@ -493,6 +493,7 @@ void pubAgentFrame(const Estimator &estimator, const cv::Mat &image, camodocal::
         vector<BRIEF::bitset> brief_descriptors, window_brief_descriptors;
         extractor(image, keypoints_uv, brief_descriptors);
 
+        
         for (int i = 0; i < (int)keypoints_uv.size(); i++)
         {
             Eigen::Vector3d tmp_p;
@@ -501,6 +502,7 @@ void pubAgentFrame(const Estimator &estimator, const cv::Mat &image, camodocal::
             tmp_norm.pt = cv::Point2f(tmp_p.x()/tmp_p.z(), tmp_p.y()/tmp_p.z());
             keypoints_2d.push_back(tmp_norm);
         }
+        
 
         for(int i = 0; i < (int)window_points_uv.size(); i++)
         {
@@ -519,7 +521,7 @@ void pubAgentFrame(const Estimator &estimator, const cv::Mat &image, camodocal::
             p.z = window_points_3d[i](2);
             agent_frame_msg.point_3d.push_back(p);
         }
-        
+        /*
         for(int i = 0 ; i < (int)window_points_2d.size(); i++)
         {
             geometry_msgs::Point32 p;
@@ -528,7 +530,7 @@ void pubAgentFrame(const Estimator &estimator, const cv::Mat &image, camodocal::
             p.z = 1;
             agent_frame_msg.point_2d.push_back(p);
         }
-
+        */
         for(int i = 0 ; i < (int)keypoints_2d.size(); i++)
         {
             geometry_msgs::Point32 p;

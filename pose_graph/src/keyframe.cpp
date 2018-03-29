@@ -289,7 +289,7 @@ bool KeyFrame::findConnection(KeyFrame* old_kf)
 
 	matched_3d = point_3d;
 	//matched_uv_cur = point_uv;
-	matched_2d_cur = point_2d;
+	//matched_2d_cur = point_2d;
 	//matched_id = point_id;
 
 	TicToc t_match;
@@ -323,7 +323,7 @@ bool KeyFrame::findConnection(KeyFrame* old_kf)
 	searchByBRIEFDes(matched_2d_old, status, old_kf->feature_des, old_kf->feature_2d);
 	//reduceVector(matched_uv_cur, status);
 	//reduceVector(matched_uv_old, status);
-	reduceVector(matched_2d_cur, status);
+	//reduceVector(matched_2d_cur, status);
 	reduceVector(matched_2d_old, status);
 	reduceVector(matched_3d, status);
 	//reduceVector(matched_id, status);
@@ -425,7 +425,7 @@ bool KeyFrame::findConnection(KeyFrame* old_kf)
 	Eigen::Vector3d relative_t;
 	Quaterniond relative_q;
 	double relative_yaw;
-	if ((int)matched_2d_cur.size() > MIN_LOOP_NUM)
+	if ((int)matched_3d.size() > MIN_LOOP_NUM)
 	{
 		status.clear();
 	    PnPRANSAC(matched_2d_old, matched_3d, status, PnP_T_old, PnP_R_old);
@@ -434,7 +434,7 @@ bool KeyFrame::findConnection(KeyFrame* old_kf)
 	    
 	    //reduceVector(matched_uv_cur, status);
 	    //reduceVector(matched_uv_old, status);
-	    reduceVector(matched_2d_cur, status);
+	    //reduceVector(matched_2d_cur, status);
 	    reduceVector(matched_2d_old, status);
 	    reduceVector(matched_3d, status);
 	    //reduceVector(matched_id, status);
@@ -478,7 +478,7 @@ bool KeyFrame::findConnection(KeyFrame* old_kf)
 	                    << old_kf->index << "-" << "3pnp_match.jpg";
 	            cv::imwrite( path.str().c_str(), loop_match_img);
 	            */
-	            if ((int)matched_2d_cur.size() > MIN_LOOP_NUM)
+	            if ((int)matched_3d.size() > MIN_LOOP_NUM)
 	            {
 	            	/*
 	            	cv::imshow("loop connection",loop_match_img);  
@@ -494,7 +494,7 @@ bool KeyFrame::findConnection(KeyFrame* old_kf)
 	    #endif
 	}
 
-	if ((int)matched_2d_cur.size() > MIN_LOOP_NUM)
+	if ((int)matched_3d.size() > MIN_LOOP_NUM)
 	{
 	    relative_t = PnP_R_old.transpose() * (origin_vio_T - PnP_T_old);
 	    relative_q = PnP_R_old.transpose() * origin_vio_R;

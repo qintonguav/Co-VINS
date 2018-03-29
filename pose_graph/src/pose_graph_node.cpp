@@ -360,7 +360,7 @@ void agent_process()
                 p_3d.z = agent_msg->point_3d[i].z;
                 point_3d.push_back(p_3d);
             }
-            
+            /*
             for (unsigned int i = 0; i < agent_msg->point_2d.size(); i++)
             {
                 cv::Point2f p_2d;
@@ -368,7 +368,7 @@ void agent_process()
                 p_2d.y = agent_msg->point_2d[i].y;
                 point_2d.push_back(p_2d);
             }
-
+            */
             for (unsigned int i = 0; i < agent_msg->feature_2d.size(); i++)
             {
                 cv::Point2f p_2d;
