@@ -202,6 +202,8 @@ void PoseGraph::addKeyFrame(KeyFrame* cur_kf, bool flag_detect_loop)
     Matrix3d vio_R_cur;
     if (sequence_cnt != cur_kf->sequence)
     {
+        cout << "sequence_cnt " << sequence_cnt << endl;
+        cout << "cur_kf sequence " << cur_kf->sequence << endl;
         sequence_cnt++;
         sequence_loop.push_back(0);
         w_t_vio = Eigen::Vector3d(0, 0, 0);
@@ -1026,6 +1028,7 @@ void PoseGraph::publish()
 {
     for (int i = 1; i <= sequence_cnt; i++)
     {
+        //cout << "publish sequence_cnt " << sequence_cnt << endl;
         //if (sequence_loop[i] == true || i == base_sequence)
         if (1 || i == base_sequence)
         {

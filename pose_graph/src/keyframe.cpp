@@ -11,8 +11,9 @@ static void reduceVector(vector<Derived> &v, vector<uchar> status)
 }
 
 // create keyframe online
-KeyFrame::KeyFrame(double _time_stamp, int _index, Vector3d &_vio_T_w_i, Matrix3d &_vio_R_w_i, cv::Mat &_image,
-		           vector<cv::Point3f> &_point_3d, vector<cv::Point2f> &_point_2d_uv, vector<cv::Point2f> &_point_2d,
+KeyFrame::KeyFrame(double _time_stamp, int _index, Vector3d &_vio_T_w_i, Matrix3d &_vio_R_w_i, 
+					Vector3d &_tic, Matrix3d &_ric, cv::Mat &_image,
+		           vector<cv::Point3f> &_point_3d, vector<cv::Point2f> &_point_uv, vector<cv::Point2f> &_point_2d,
 		           vector<double> &_point_id, int _sequence)
 {
 	time_stamp = _time_stamp;
@@ -26,7 +27,7 @@ KeyFrame::KeyFrame(double _time_stamp, int _index, Vector3d &_vio_T_w_i, Matrix3
 	image = _image.clone();
 	cv::resize(image, thumbnail, cv::Size(80, 60));
 	point_3d = _point_3d;
-	point_2d_uv = _point_2d_uv;
+	point_uv = _point_uv;
 	point_2d = _point_2d;
 	point_id = _point_id;
 	has_loop = false;
@@ -34,6 +35,8 @@ KeyFrame::KeyFrame(double _time_stamp, int _index, Vector3d &_vio_T_w_i, Matrix3
 	has_fast_point = false;
 	loop_info << 0, 0, 0, 0, 0, 0, 0, 0;
 	sequence = _sequence;
+	tic = _tic;
+	ric = _ric;
 	computeWindowBRIEFPoint();
 	computeBRIEFPoint();
 	if(!DEBUG_IMAGE)
@@ -71,14 +74,20 @@ KeyFrame::KeyFrame(double _time_stamp, int _index, Vector3d &_vio_T_w_i, Matrix3
 	feature_des = _feature_des;
 }
 
-KeyFrame::KeyFrame(int _index, int _seq, Vector3d &_vio_T_w_c, Matrix3d &_vio_R_w_c, 
+KeyFrame::KeyFrame(int _index, int _seq, Vector3d &_vio_T_w_i, Matrix3d &_vio_R_w_i, Vector3d &_tic, Matrix3d &_ric,
 					vector<cv::Point3f> &_point_3d, vector<cv::Point2f> &_point_2d, vector<cv::Point2f> &_feature_2d, 
 					vector<BRIEF::bitset> &_point_des, vector<BRIEF::bitset> &_feature_des)
 {
 	index = _index;
 	sequence = _seq;
-	vio_T_w_c = _vio_T_w_c;
-	vio_R_w_c = _vio_R_w_c; 
+
+	vio_T_w_i = _vio_T_w_i;
+	vio_R_w_i = _vio_R_w_i;
+	T_w_i = vio_T_w_i;
+	R_w_i = vio_R_w_i;
+	origin_vio_T = vio_T_w_i;		
+	origin_vio_R = vio_R_w_i;
+
 	point_3d = _point_3d;
 	point_2d = _point_2d;
 	feature_2d = _feature_2d;
@@ -92,10 +101,10 @@ KeyFrame::KeyFrame(int _index, int _seq, Vector3d &_vio_T_w_c, Matrix3d &_vio_R_
 void KeyFrame::computeWindowBRIEFPoint()
 {
 	BriefExtractor extractor(BRIEF_PATTERN_FILE.c_str());
-	for(int i = 0; i < (int)point_2d_uv.size(); i++)
+	for(int i = 0; i < (int)point_uv.size(); i++)
 	{
 	    cv::KeyPoint key;
-	    key.pt = point_2d_uv[i];
+	    key.pt = point_uv[i];
 	    window_keypoints.push_back(key);
 	}
 	extractor(image, window_keypoints, point_des);
@@ -105,12 +114,12 @@ void KeyFrame::computeBRIEFPoint()
 {
 	BriefExtractor extractor(BRIEF_PATTERN_FILE.c_str());
 	const int fast_th = 20; // corner detector response threshold
-	if(0)
+	if(1)
 		cv::FAST(image, keypoints, fast_th, true);
 	else
 	{
 		vector<cv::Point2f> tmp_pts;
-		cv::goodFeaturesToTrack(image, tmp_pts, 1000, 0.01, 10);
+		cv::goodFeaturesToTrack(image, tmp_pts, 1500, 0.01, 10);
 		for(int i = 0; i < (int)tmp_pts.size(); i++)
 		{
 		    cv::KeyPoint key;
@@ -135,9 +144,7 @@ void BriefExtractor::operator() (const cv::Mat &im, vector<cv::KeyPoint> &keys, 
 
 bool KeyFrame::searchInAera(const BRIEF::bitset window_descriptor,
                             const std::vector<BRIEF::bitset> &descriptors_old,
-                            const std::vector<cv::KeyPoint> &keypoints_old,
                             const std::vector<cv::Point2f> &feature_2d_old,
-                            cv::Point2f &best_match,
                             cv::Point2f &best_match_norm)
 {
     cv::Point2f best_pt;
@@ -156,7 +163,6 @@ bool KeyFrame::searchInAera(const BRIEF::bitset window_descriptor,
     //printf("best dist %d", bestDist);
     if (bestIndex != -1 && bestDist < 80)
     {
-      best_match = keypoints_old[bestIndex].pt;
       best_match_norm = feature_2d_old[bestIndex];
       return true;
     }
@@ -165,54 +171,51 @@ bool KeyFrame::searchInAera(const BRIEF::bitset window_descriptor,
 }
 
 void KeyFrame::searchByBRIEFDes(std::vector<cv::Point2f> &matched_2d_old,
-								std::vector<cv::Point2f> &matched_2d_old_norm,
                                 std::vector<uchar> &status,
                                 const std::vector<BRIEF::bitset> &descriptors_old,
-                                const std::vector<cv::KeyPoint> &keypoints_old,
                                 const std::vector<cv::Point2f> &feature_2d_old)
 {
     for(int i = 0; i < (int)point_des.size(); i++)
     {
         cv::Point2f pt(0.f, 0.f);
         cv::Point2f pt_norm(0.f, 0.f);
-        if (searchInAera(point_des[i], descriptors_old, keypoints_old, feature_2d_old, pt, pt_norm))
+        if (searchInAera(point_des[i], descriptors_old, feature_2d_old, pt_norm))
           status.push_back(1);
         else
           status.push_back(0);
-        matched_2d_old.push_back(pt);
-        matched_2d_old_norm.push_back(pt_norm);
+        matched_2d_old.push_back(pt_norm);
     }
 
 }
 
 
-void KeyFrame::FundmantalMatrixRANSAC(const std::vector<cv::Point2f> &matched_2d_cur_norm,
-                                      const std::vector<cv::Point2f> &matched_2d_old_norm,
+void KeyFrame::FundmantalMatrixRANSAC(const std::vector<cv::Point2f> &matched_2d_cur,
+                                      const std::vector<cv::Point2f> &matched_2d_old,
                                       vector<uchar> &status)
 {
-	int n = (int)matched_2d_cur_norm.size();
+	int n = (int)matched_2d_cur.size();
 	for (int i = 0; i < n; i++)
 		status.push_back(0);
     if (n >= 8)
     {
         vector<cv::Point2f> tmp_cur(n), tmp_old(n);
-        for (int i = 0; i < (int)matched_2d_cur_norm.size(); i++)
+        for (int i = 0; i < (int)matched_2d_cur.size(); i++)
         {
             double FOCAL_LENGTH = 460.0;
             double tmp_x, tmp_y;
-            tmp_x = FOCAL_LENGTH * matched_2d_cur_norm[i].x + COL / 2.0;
-            tmp_y = FOCAL_LENGTH * matched_2d_cur_norm[i].y + ROW / 2.0;
+            tmp_x = FOCAL_LENGTH * matched_2d_cur[i].x + COL / 2.0;
+            tmp_y = FOCAL_LENGTH * matched_2d_cur[i].y + ROW / 2.0;
             tmp_cur[i] = cv::Point2f(tmp_x, tmp_y);
 
-            tmp_x = FOCAL_LENGTH * matched_2d_old_norm[i].x + COL / 2.0;
-            tmp_y = FOCAL_LENGTH * matched_2d_old_norm[i].y + ROW / 2.0;
+            tmp_x = FOCAL_LENGTH * matched_2d_old[i].x + COL / 2.0;
+            tmp_y = FOCAL_LENGTH * matched_2d_old[i].y + ROW / 2.0;
             tmp_old[i] = cv::Point2f(tmp_x, tmp_y);
         }
         cv::findFundamentalMat(tmp_cur, tmp_old, cv::FM_RANSAC, 3.0, 0.9, status);
     }
 }
 
-void KeyFrame::PnPRANSAC(const vector<cv::Point2f> &matched_2d_old_norm,
+void KeyFrame::PnPRANSAC(const vector<cv::Point2f> &matched_2d_old,
                          const std::vector<cv::Point3f> &matched_3d,
                          std::vector<uchar> &status,
                          Eigen::Vector3d &PnP_T_old, Eigen::Matrix3d &PnP_R_old)
@@ -224,7 +227,7 @@ void KeyFrame::PnPRANSAC(const vector<cv::Point2f> &matched_2d_old_norm,
     cv::Mat K = (cv::Mat_<double>(3, 3) << 1.0, 0, 0, 0, 1.0, 0, 0, 0, 1.0);
     Matrix3d R_inital;
     Vector3d P_inital;
-    Matrix3d R_w_c = origin_vio_R * qic;
+    Matrix3d R_w_c = origin_vio_R * ric;
     Vector3d T_w_c = origin_vio_T + origin_vio_R * tic;
 
     R_inital = R_w_c.inverse();
@@ -238,17 +241,17 @@ void KeyFrame::PnPRANSAC(const vector<cv::Point2f> &matched_2d_old_norm,
     TicToc t_pnp_ransac;
 
     if (CV_MAJOR_VERSION < 3)
-        solvePnPRansac(matched_3d, matched_2d_old_norm, K, D, rvec, t, true, 100, 10.0 / 460.0, 100, inliers);
+        solvePnPRansac(matched_3d, matched_2d_old, K, D, rvec, t, true, 100, 10.0 / 460.0, 100, inliers);
     else
     {
         if (CV_MINOR_VERSION < 2)
-            solvePnPRansac(matched_3d, matched_2d_old_norm, K, D, rvec, t, true, 100, sqrt(10.0 / 460.0), 0.99, inliers);
+            solvePnPRansac(matched_3d, matched_2d_old, K, D, rvec, t, true, 100, sqrt(10.0 / 460.0), 0.99, inliers);
         else
-            solvePnPRansac(matched_3d, matched_2d_old_norm, K, D, rvec, t, true, 100, 10.0 / 460.0, 0.99, inliers);
+            solvePnPRansac(matched_3d, matched_2d_old, K, D, rvec, t, true, 100, 10.0 / 460.0, 0.99, inliers);
 
     }
 
-    for (int i = 0; i < (int)matched_2d_old_norm.size(); i++)
+    for (int i = 0; i < (int)matched_2d_old.size(); i++)
         status.push_back(0);
 
     for( int i = 0; i < inliers.rows; i++)
@@ -265,9 +268,8 @@ void KeyFrame::PnPRANSAC(const vector<cv::Point2f> &matched_2d_old_norm,
     cv::cv2eigen(t, T_pnp);
     T_w_c_old = R_w_c_old * (-T_pnp);
 
-    PnP_R_old = R_w_c_old * qic.transpose();
-    PnP_T_old = T_w_c_old - PnP_R_old * tic;
-
+    PnP_R_old = R_w_c_old;
+    PnP_T_old = T_w_c_old;
 }
 
 
@@ -275,15 +277,15 @@ bool KeyFrame::findConnection(KeyFrame* old_kf)
 {
 	TicToc tmp_t;
 	//printf("find Connection\n");
+	vector<cv::Point2f> matched_uv_cur, matched_uv_old;
 	vector<cv::Point2f> matched_2d_cur, matched_2d_old;
-	vector<cv::Point2f> matched_2d_cur_norm, matched_2d_old_norm;
 	vector<cv::Point3f> matched_3d;
 	vector<double> matched_id;
 	vector<uchar> status;
 
 	matched_3d = point_3d;
-	matched_2d_cur = point_2d_uv;
-	matched_2d_cur_norm = point_2d;
+	matched_uv_cur = point_uv;
+	matched_2d_cur = point_2d;
 	matched_id = point_id;
 
 	TicToc t_match;
@@ -294,9 +296,9 @@ bool KeyFrame::findConnection(KeyFrame* old_kf)
 	        cv::Mat old_img = old_kf->image;
 	        cv::hconcat(image, old_img, gray_img);
 	        cvtColor(gray_img, loop_match_img, CV_GRAY2RGB);
-	        for(int i = 0; i< (int)point_2d_uv.size(); i++)
+	        for(int i = 0; i< (int)point_uv.size(); i++)
 	        {
-	            cv::Point2f cur_pt = point_2d_uv[i];
+	            cv::Point2f cur_pt = point_uv[i];
 	            cv::circle(loop_match_img, cur_pt, 5, cv::Scalar(0, 255, 0));
 	        }
 	        for(int i = 0; i< (int)old_kf->keypoints.size(); i++)
@@ -313,13 +315,14 @@ bool KeyFrame::findConnection(KeyFrame* old_kf)
 	    }
 	#endif
 	//printf("search by des\n");
-	searchByBRIEFDes(matched_2d_old, matched_2d_old_norm, status, old_kf->feature_des, old_kf->keypoints, old_kf->feature_2d);
+	//searchByBRIEFDes(matched_uv_old, matched_2d_old, status, old_kf->feature_des, old_kf->keypoints, old_kf->feature_2d);
+	searchByBRIEFDes(matched_2d_old, status, old_kf->feature_des, old_kf->feature_2d);
+	//reduceVector(matched_uv_cur, status);
+	//reduceVector(matched_uv_old, status);
 	reduceVector(matched_2d_cur, status);
 	reduceVector(matched_2d_old, status);
-	reduceVector(matched_2d_cur_norm, status);
-	reduceVector(matched_2d_old_norm, status);
 	reduceVector(matched_3d, status);
-	reduceVector(matched_id, status);
+	//reduceVector(matched_id, status);
 	//printf("search by des finish\n");
 
 	#if 0 
@@ -332,22 +335,22 @@ bool KeyFrame::findConnection(KeyFrame* old_kf)
             cv::hconcat(image, gap_image, gap_image);
             cv::hconcat(gap_image, old_img, gray_img);
             cvtColor(gray_img, loop_match_img, CV_GRAY2RGB);
-	        for(int i = 0; i< (int)matched_2d_cur.size(); i++)
+	        for(int i = 0; i< (int)matched_uv_cur.size(); i++)
 	        {
-	            cv::Point2f cur_pt = matched_2d_cur[i];
+	            cv::Point2f cur_pt = matched_uv_cur[i];
 	            cv::circle(loop_match_img, cur_pt, 5, cv::Scalar(0, 255, 0));
 	        }
-	        for(int i = 0; i< (int)matched_2d_old.size(); i++)
+	        for(int i = 0; i< (int)matched_uv_old.size(); i++)
 	        {
-	            cv::Point2f old_pt = matched_2d_old[i];
+	            cv::Point2f old_pt = matched_uv_old[i];
 	            old_pt.x += (COL + gap);
 	            cv::circle(loop_match_img, old_pt, 5, cv::Scalar(0, 255, 0));
 	        }
-	        for (int i = 0; i< (int)matched_2d_cur.size(); i++)
+	        for (int i = 0; i< (int)matched_uv_cur.size(); i++)
 	        {
-	            cv::Point2f old_pt = matched_2d_old[i];
+	            cv::Point2f old_pt = matched_uv_old[i];
 	            old_pt.x +=  (COL + gap);
-	            cv::line(loop_match_img, matched_2d_cur[i], old_pt, cv::Scalar(0, 255, 0), 1, 8, 0);
+	            cv::line(loop_match_img, matched_uv_cur[i], old_pt, cv::Scalar(0, 255, 0), 1, 8, 0);
 	        }
 
 	        ostringstream path, path1, path2;
@@ -370,11 +373,11 @@ bool KeyFrame::findConnection(KeyFrame* old_kf)
 	#endif
 	status.clear();
 	/*
-	FundmantalMatrixRANSAC(matched_2d_cur_norm, matched_2d_old_norm, status);
+	FundmantalMatrixRANSAC(matched_2d_cur, matched_2d_old, status);
+	reduceVector(matched_uv_cur, status);
+	reduceVector(matched_uv_old, status);
 	reduceVector(matched_2d_cur, status);
 	reduceVector(matched_2d_old, status);
-	reduceVector(matched_2d_cur_norm, status);
-	reduceVector(matched_2d_old_norm, status);
 	reduceVector(matched_3d, status);
 	reduceVector(matched_id, status);
 	*/
@@ -388,22 +391,22 @@ bool KeyFrame::findConnection(KeyFrame* old_kf)
             cv::hconcat(image, gap_image, gap_image);
             cv::hconcat(gap_image, old_img, gray_img);
             cvtColor(gray_img, loop_match_img, CV_GRAY2RGB);
-	        for(int i = 0; i< (int)matched_2d_cur.size(); i++)
+	        for(int i = 0; i< (int)matched_uv_cur.size(); i++)
 	        {
-	            cv::Point2f cur_pt = matched_2d_cur[i];
+	            cv::Point2f cur_pt = matched_uv_cur[i];
 	            cv::circle(loop_match_img, cur_pt, 5, cv::Scalar(0, 255, 0));
 	        }
-	        for(int i = 0; i< (int)matched_2d_old.size(); i++)
+	        for(int i = 0; i< (int)matched_uv_old.size(); i++)
 	        {
-	            cv::Point2f old_pt = matched_2d_old[i];
+	            cv::Point2f old_pt = matched_uv_old[i];
 	            old_pt.x += (COL + gap);
 	            cv::circle(loop_match_img, old_pt, 5, cv::Scalar(0, 255, 0));
 	        }
-	        for (int i = 0; i< (int)matched_2d_cur.size(); i++)
+	        for (int i = 0; i< (int)matched_uv_cur.size(); i++)
 	        {
-	            cv::Point2f old_pt = matched_2d_old[i];
+	            cv::Point2f old_pt = matched_uv_old[i];
 	            old_pt.x +=  (COL + gap) ;
-	            cv::line(loop_match_img, matched_2d_cur[i], old_pt, cv::Scalar(0, 255, 0), 1, 8, 0);
+	            cv::line(loop_match_img, matched_uv_cur[i], old_pt, cv::Scalar(0, 255, 0), 1, 8, 0);
 	        }
 
 	        ostringstream path;
@@ -421,13 +424,16 @@ bool KeyFrame::findConnection(KeyFrame* old_kf)
 	if ((int)matched_2d_cur.size() > MIN_LOOP_NUM)
 	{
 		status.clear();
-	    PnPRANSAC(matched_2d_old_norm, matched_3d, status, PnP_T_old, PnP_R_old);
+	    PnPRANSAC(matched_2d_old, matched_3d, status, PnP_T_old, PnP_R_old);
+	    PnP_R_old = PnP_R_old * old_kf->ric.transpose();
+	    PnP_T_old = PnP_T_old - PnP_R_old * old_kf->tic;
+	    
+	    //reduceVector(matched_uv_cur, status);
+	    //reduceVector(matched_uv_old, status);
 	    reduceVector(matched_2d_cur, status);
 	    reduceVector(matched_2d_old, status);
-	    reduceVector(matched_2d_cur_norm, status);
-	    reduceVector(matched_2d_old_norm, status);
 	    reduceVector(matched_3d, status);
-	    reduceVector(matched_id, status);
+	    //reduceVector(matched_id, status);
 	    #if 1
 	    	if (DEBUG_IMAGE)
 	        {
@@ -438,22 +444,22 @@ bool KeyFrame::findConnection(KeyFrame* old_kf)
 	            cv::hconcat(image, gap_image, gap_image);
 	            cv::hconcat(gap_image, old_img, gray_img);
 	            cvtColor(gray_img, loop_match_img, CV_GRAY2RGB);
-	            for(int i = 0; i< (int)matched_2d_cur.size(); i++)
+	            for(int i = 0; i< (int)matched_uv_cur.size(); i++)
 	            {
-	                cv::Point2f cur_pt = matched_2d_cur[i];
+	                cv::Point2f cur_pt = matched_uv_cur[i];
 	                cv::circle(loop_match_img, cur_pt, 5, cv::Scalar(0, 255, 0));
 	            }
-	            for(int i = 0; i< (int)matched_2d_old.size(); i++)
+	            for(int i = 0; i< (int)matched_uv_old.size(); i++)
 	            {
-	                cv::Point2f old_pt = matched_2d_old[i];
+	                cv::Point2f old_pt = matched_uv_old[i];
 	                old_pt.x += (COL + gap);
 	                cv::circle(loop_match_img, old_pt, 5, cv::Scalar(0, 255, 0));
 	            }
-	            for (int i = 0; i< (int)matched_2d_cur.size(); i++)
+	            for (int i = 0; i< (int)matched_uv_cur.size(); i++)
 	            {
-	                cv::Point2f old_pt = matched_2d_old[i];
+	                cv::Point2f old_pt = matched_uv_old[i];
 	                old_pt.x += (COL + gap) ;
-	                cv::line(loop_match_img, matched_2d_cur[i], old_pt, cv::Scalar(0, 255, 0), 2, 8, 0);
+	                cv::line(loop_match_img, matched_uv_cur[i], old_pt, cv::Scalar(0, 255, 0), 2, 8, 0);
 	            }
 	            cv::Mat notation(50, COL + gap + COL, CV_8UC3, cv::Scalar(255, 255, 255));
 	            putText(notation, "current frame: " + to_string(index) + "  sequence: " + to_string(sequence), cv::Point2f(20, 30), CV_FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255), 3);
@@ -504,11 +510,11 @@ bool KeyFrame::findConnection(KeyFrame* old_kf)
 	    	{
 			    sensor_msgs::PointCloud msg_match_points;
 			    msg_match_points.header.stamp = ros::Time(time_stamp);
-			    for (int i = 0; i < (int)matched_2d_old_norm.size(); i++)
+			    for (int i = 0; i < (int)matched_2d_old.size(); i++)
 			    {
 		            geometry_msgs::Point32 p;
-		            p.x = matched_2d_old_norm[i].x;
-		            p.y = matched_2d_old_norm[i].y;
+		            p.x = matched_2d_old[i].x;
+		            p.y = matched_2d_old[i].y;
 		            p.z = matched_id[i];
 		            msg_match_points.points.push_back(p);
 			    }
@@ -530,7 +536,7 @@ bool KeyFrame::findConnection(KeyFrame* old_kf)
 	        return true;
 	    }
 	}
-	//printf("loop final use num %d %lf--------------- \n", (int)matched_2d_cur.size(), t_match.toc());
+	//printf("loop final use num %d %lf--------------- \n", (int)matched_uv_cur.size(), t_match.toc());
 	return false;
 }
 
@@ -546,12 +552,6 @@ void KeyFrame::getVioPose(Eigen::Vector3d &_T_w_i, Eigen::Matrix3d &_R_w_i)
 {
     _T_w_i = vio_T_w_i;
     _R_w_i = vio_R_w_i;
-}
-
-void KeyFrame::getVioCameraPose(Eigen::Vector3d &_T_w_c, Eigen::Matrix3d &_R_w_c)
-{
-    _T_w_c = vio_T_w_c;
-    _R_w_c = vio_R_w_c;
 }
 
 void KeyFrame::getPose(Eigen::Vector3d &_T_w_i, Eigen::Matrix3d &_R_w_i)

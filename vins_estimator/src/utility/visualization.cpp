@@ -435,16 +435,26 @@ void pubAgentFrame(const Estimator &estimator, const cv::Mat &image, camodocal::
         agent_frame_msg.seq = AGENT_NUM;
 
         int i = WINDOW_SIZE - 2;
-        Vector3d P = estimator.Ps[i] + estimator.Rs[i] * estimator.tic[0];
-        Quaterniond R = Quaterniond(estimator.Rs[i] * estimator.ric[0]);
+        //Vector3d P = estimator.Ps[i] + estimator.Rs[i] * estimator.tic[0];
+        //Quaterniond R = Quaterniond(estimator.Rs[i] * estimator.ric[0]);
+        Vector3d P = estimator.Ps[i];
+        Quaterniond R = Quaterniond(estimator.Rs[i]);
+        agent_frame_msg.position_imu.x = P.x();
+        agent_frame_msg.position_imu.y = P.y();
+        agent_frame_msg.position_imu.z = P.z();
+        agent_frame_msg.orientation_imu.x = R.x();
+        agent_frame_msg.orientation_imu.y = R.y();
+        agent_frame_msg.orientation_imu.z = R.z();
+        agent_frame_msg.orientation_imu.w = R.w();
 
-        agent_frame_msg.position.x = P.x();
-        agent_frame_msg.position.y = P.y();
-        agent_frame_msg.position.z = P.z();
-        agent_frame_msg.orientation.x = R.x();
-        agent_frame_msg.orientation.y = R.y();
-        agent_frame_msg.orientation.z = R.z();
-        agent_frame_msg.orientation.w = R.w();
+        agent_frame_msg.tic.x = estimator.tic[0].x();
+        agent_frame_msg.tic.y = estimator.tic[0].y();
+        agent_frame_msg.tic.z = estimator.tic[0].z();
+        Quaterniond tmpQ(estimator.ric[0]);
+        agent_frame_msg.orientation_imu.x = tmpQ.x();
+        agent_frame_msg.orientation_imu.y = tmpQ.y();
+        agent_frame_msg.orientation_imu.z = tmpQ.z();
+        agent_frame_msg.orientation_imu.w = tmpQ.w();
 
         vector<Eigen::Vector3d> window_points_3d;
         vector<Eigen::Vector2d> window_points_2d;

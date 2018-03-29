@@ -8,13 +8,13 @@
     </include>
     </group>
 
-    <group ns="agent1">
+<!--     <group ns="agent1">
     <include file="$(find vins_estimator)/launch/agent.launch">
         <arg name="config_path" default = "$(find feature_tracker)/../config/euroc/euroc_config.yaml" />
         <arg name="vins_path" default = "$(find feature_tracker)/../config/../" />
         <arg name="agent_serial" value="1" /> 
     </include>
-    </group>
+    </group> -->
 <!--     <arg name="config_path" default = "$(find feature_tracker)/../config/euroc/euroc_config.yaml" />
     <node name="pose_graph" pkg="pose_graph" type="pose_graph" output="screen">
         <param name="config_file" type="string" value="$(arg config_path)" />

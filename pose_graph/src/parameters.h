@@ -11,8 +11,6 @@
 #include <cv_bridge/cv_bridge.h>
 
 extern camodocal::CameraPtr m_camera;
-extern Eigen::Vector3d tic;
-extern Eigen::Matrix3d qic;
 extern ros::Publisher pub_match_img;
 extern ros::Publisher pub_match_points;
 extern int VISUALIZATION_SHIFT_X;

@@ -32,13 +32,15 @@ public:
 class KeyFrame
 {
 public:
-	KeyFrame(double _time_stamp, int _index, Vector3d &_vio_T_w_i, Matrix3d &_vio_R_w_i, cv::Mat &_image,
-			 vector<cv::Point3f> &_point_3d, vector<cv::Point2f> &_point_2d_uv, vector<cv::Point2f> &_point_2d, 
+	KeyFrame(double _time_stamp, int _index, Vector3d &_vio_T_w_i, Matrix3d &_vio_R_w_i, 
+			 Vector3d &_tic, Matrix3d &_ric, cv::Mat &_image,
+			 vector<cv::Point3f> &_point_3d, vector<cv::Point2f> &_point_uv, vector<cv::Point2f> &_point_2d, 
 			 vector<double> &_point_id, int _sequence);
 	KeyFrame(double _time_stamp, int _index, Vector3d &_vio_T_w_i, Matrix3d &_vio_R_w_i, Vector3d &_T_w_i, Matrix3d &_R_w_i,
 			 cv::Mat &_image, int _loop_index, Eigen::Matrix<double, 8, 1 > &_loop_info,
 			 vector<cv::KeyPoint> &_keypoints, vector<cv::Point2f> &_feature_2d, vector<BRIEF::bitset> &_feature_des);
-	KeyFrame(int _index, int _seq, Vector3d &_vio_T_w_c, Matrix3d &_vio_R_w_c, vector<cv::Point3f> &_point_3d, vector<cv::Point2f> &_point_2d,
+	KeyFrame(int _index, int _seq, Vector3d &_vio_T_w_i, Matrix3d &_vio_R_w_i, Vector3d &_tic, Matrix3d &_ric,
+			vector<cv::Point3f> &_point_3d, vector<cv::Point2f> &_point_2d,
 			 vector<cv::Point2f> &_feature_2d, vector<BRIEF::bitset> &_point_des, vector<BRIEF::bitset> &_feature_des);
 	bool findConnection(KeyFrame* old_kf);
 	void computeWindowBRIEFPoint();
@@ -47,20 +49,16 @@ public:
 	int HammingDis(const BRIEF::bitset &a, const BRIEF::bitset &b);
 	bool searchInAera(const BRIEF::bitset window_descriptor,
 	                  const std::vector<BRIEF::bitset> &descriptors_old,
-	                  const std::vector<cv::KeyPoint> &keypoints_old,
 	                  const std::vector<cv::Point2f> &feature_2d_old,
-	                  cv::Point2f &best_match,
 	                  cv::Point2f &best_match_norm);
 	void searchByBRIEFDes(std::vector<cv::Point2f> &matched_2d_old,
-						  std::vector<cv::Point2f> &matched_2d_old_norm,
                           std::vector<uchar> &status,
                           const std::vector<BRIEF::bitset> &descriptors_old,
-                          const std::vector<cv::KeyPoint> &keypoints_old,
                           const std::vector<cv::Point2f> &feature_2d_old);
-	void FundmantalMatrixRANSAC(const std::vector<cv::Point2f> &matched_2d_cur_norm,
-                                const std::vector<cv::Point2f> &matched_2d_old_norm,
+	void FundmantalMatrixRANSAC(const std::vector<cv::Point2f> &matched_2d_cur,
+                                const std::vector<cv::Point2f> &matched_2d_old,
                                 vector<uchar> &status);
-	void PnPRANSAC(const vector<cv::Point2f> &matched_2d_old_norm,
+	void PnPRANSAC(const vector<cv::Point2f> &matched_2d_old,
 	               const std::vector<cv::Point3f> &matched_3d,
 	               std::vector<uchar> &status,
 	               Eigen::Vector3d &PnP_T_old, Eigen::Matrix3d &PnP_R_old);
@@ -69,7 +67,6 @@ public:
 	void updatePose(const Eigen::Vector3d &_T_w_i, const Eigen::Matrix3d &_R_w_i);
 	void updateVioPose(const Eigen::Vector3d &_T_w_i, const Eigen::Matrix3d &_R_w_i);
 	void updateLoop(Eigen::Matrix<double, 8, 1 > &_loop_info);
-	void getVioCameraPose(Eigen::Vector3d &_T_w_c, Eigen::Matrix3d &_R_w_c);
 
 	Eigen::Vector3d getLoopRelativeT();
 	double getLoopRelativeYaw();
@@ -89,7 +86,7 @@ public:
 	cv::Mat image;
 	cv::Mat thumbnail;
 	vector<cv::Point3f> point_3d; 
-	vector<cv::Point2f> point_2d_uv;
+	vector<cv::Point2f> point_uv;
 	vector<cv::Point2f> point_2d;
 	vector<double> point_id;
 	vector<cv::KeyPoint> keypoints;  //feature_uv
@@ -103,10 +100,10 @@ public:
 	bool has_loop;
 	int loop_index;
 	Eigen::Matrix<double, 8, 1 > loop_info;
+	Vector3d tic;
+	Matrix3d ric;
 
 	// swarm version
-	Eigen::Vector3d vio_T_w_c; 
-	Eigen::Matrix3d vio_R_w_c; 
 	//vector<cv::Point3f> point_3d; 
 	//vector<cv::Point2f> point_2d;
 	//vector<cv::Point2f> feature_2d;
