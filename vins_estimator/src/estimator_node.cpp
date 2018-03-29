@@ -178,7 +178,6 @@ void imu_callback(const sensor_msgs::ImuConstPtr &imu_msg)
 
 void image_callback(const sensor_msgs::ImageConstPtr &img_msg)
 {
-    ROS_WARN("receive raw image");
     m_image_buf.lock();
     image_buf.push(img_msg);
     m_image_buf.unlock();
@@ -311,8 +310,6 @@ void process()
                 estimator.setReloFrame(frame_stamp, frame_index, match_points, relo_t, relo_r);
             }
 
-            ROS_DEBUG("processing vision data with stamp %f \n", img_msg->header.stamp.toSec());
-
             TicToc t_s;
             map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>> image;
             for (unsigned int i = 0; i < img_msg->points.size(); i++)
@@ -361,8 +358,6 @@ void process()
                     if (!image_buf.empty())
                     {
                         image_msg = image_buf.front();
-                        printf("feature time stamp %lf\n", header.stamp.toSec());
-                        printf("image time stamp %lf\n", image_msg->header.stamp.toSec());
                     }
                     m_image_buf.unlock();
                     if (image_msg == NULL || image_msg->header.stamp.toSec() != estimator.Headers[WINDOW_SIZE - 2].stamp.toSec())

@@ -74,6 +74,7 @@ KeyFrame::KeyFrame(double _time_stamp, int _index, Vector3d &_vio_T_w_i, Matrix3
 	feature_des = _feature_des;
 }
 
+//create keyframe by agent msg
 KeyFrame::KeyFrame(int _index, int _seq, Vector3d &_vio_T_w_i, Matrix3d &_vio_R_w_i, Vector3d &_tic, Matrix3d &_ric,
 					vector<cv::Point3f> &_point_3d, vector<cv::Point2f> &_point_2d, vector<cv::Point2f> &_feature_2d, 
 					vector<BRIEF::bitset> &_point_des, vector<BRIEF::bitset> &_feature_des)
@@ -96,6 +97,9 @@ KeyFrame::KeyFrame(int _index, int _seq, Vector3d &_vio_T_w_i, Matrix3d &_vio_R_
 	has_loop = false;
 	loop_index = -1;
 	loop_info << 0, 0, 0, 0, 0, 0, 0, 0;
+	tic = _tic;
+	ric = _ric;
+	
 }
 
 void KeyFrame::computeWindowBRIEFPoint()
@@ -114,12 +118,12 @@ void KeyFrame::computeBRIEFPoint()
 {
 	BriefExtractor extractor(BRIEF_PATTERN_FILE.c_str());
 	const int fast_th = 20; // corner detector response threshold
-	if(1)
+	if(0)
 		cv::FAST(image, keypoints, fast_th, true);
 	else
 	{
 		vector<cv::Point2f> tmp_pts;
-		cv::goodFeaturesToTrack(image, tmp_pts, 1500, 0.01, 10);
+		cv::goodFeaturesToTrack(image, tmp_pts, 1000, 0.01, 10);
 		for(int i = 0; i < (int)tmp_pts.size(); i++)
 		{
 		    cv::KeyPoint key;
@@ -284,9 +288,9 @@ bool KeyFrame::findConnection(KeyFrame* old_kf)
 	vector<uchar> status;
 
 	matched_3d = point_3d;
-	matched_uv_cur = point_uv;
+	//matched_uv_cur = point_uv;
 	matched_2d_cur = point_2d;
-	matched_id = point_id;
+	//matched_id = point_id;
 
 	TicToc t_match;
 	#if 0
@@ -536,7 +540,6 @@ bool KeyFrame::findConnection(KeyFrame* old_kf)
 	        return true;
 	    }
 	}
-	//printf("loop final use num %d %lf--------------- \n", (int)matched_uv_cur.size(), t_match.toc());
 	return false;
 }
 

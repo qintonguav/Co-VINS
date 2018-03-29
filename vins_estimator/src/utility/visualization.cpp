@@ -427,7 +427,6 @@ void pubRelocalization(const Estimator &estimator)
 
 void pubAgentFrame(const Estimator &estimator, const cv::Mat &image, camodocal::CameraPtr m_camera)
 {
-    ROS_INFO("pub agent frame");
     if (estimator.solver_flag == Estimator::SolverFlag::NON_LINEAR && estimator.marginalization_flag == 0)
     {
         agent_msg::AgentMsg agent_frame_msg;
@@ -435,8 +434,6 @@ void pubAgentFrame(const Estimator &estimator, const cv::Mat &image, camodocal::
         agent_frame_msg.seq = AGENT_NUM;
 
         int i = WINDOW_SIZE - 2;
-        //Vector3d P = estimator.Ps[i] + estimator.Rs[i] * estimator.tic[0];
-        //Quaterniond R = Quaterniond(estimator.Rs[i] * estimator.ric[0]);
         Vector3d P = estimator.Ps[i];
         Quaterniond R = Quaterniond(estimator.Rs[i]);
         agent_frame_msg.position_imu.x = P.x();
@@ -451,10 +448,10 @@ void pubAgentFrame(const Estimator &estimator, const cv::Mat &image, camodocal::
         agent_frame_msg.tic.y = estimator.tic[0].y();
         agent_frame_msg.tic.z = estimator.tic[0].z();
         Quaterniond tmpQ(estimator.ric[0]);
-        agent_frame_msg.orientation_imu.x = tmpQ.x();
-        agent_frame_msg.orientation_imu.y = tmpQ.y();
-        agent_frame_msg.orientation_imu.z = tmpQ.z();
-        agent_frame_msg.orientation_imu.w = tmpQ.w();
+        agent_frame_msg.ric.x = tmpQ.x();
+        agent_frame_msg.ric.y = tmpQ.y();
+        agent_frame_msg.ric.z = tmpQ.z();
+        agent_frame_msg.ric.w = tmpQ.w();
 
         vector<Eigen::Vector3d> window_points_3d;
         vector<Eigen::Vector2d> window_points_2d;
@@ -485,7 +482,7 @@ void pubAgentFrame(const Estimator &estimator, const cv::Mat &image, camodocal::
         else
         {
             vector<cv::Point2f> tmp_pts;
-            cv::goodFeaturesToTrack(image, tmp_pts, 500, 0.01, 10);
+            cv::goodFeaturesToTrack(image, tmp_pts, 1000, 0.01, 10);
             for(int i = 0; i < (int)tmp_pts.size(); i++)
             {
                 cv::KeyPoint key;
@@ -493,7 +490,6 @@ void pubAgentFrame(const Estimator &estimator, const cv::Mat &image, camodocal::
                 keypoints_uv.push_back(key);
             }
         }
-        cout << "fast size: " << keypoints_uv.size() << endl;
         vector<BRIEF::bitset> brief_descriptors, window_brief_descriptors;
         extractor(image, keypoints_uv, brief_descriptors);
 

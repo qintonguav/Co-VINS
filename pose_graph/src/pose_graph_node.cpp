@@ -4,6 +4,7 @@ namespace backward
 {
 backward::SignalHandling sh;
 } // namespace backward
+
 #include <vector>
 #include <ros/ros.h>
 #include <nav_msgs/Odometry.h>
@@ -104,7 +105,7 @@ void new_sequence()
 
 void agent_callback(const agent_msg::AgentMsgConstPtr &agent_msg)
 {
-    ROS_INFO("agent frame callback");
+    //ROS_INFO("agent frame callback");
     m_agent_msg_buf.lock();
     agent_msg_buf.push(agent_msg);
     m_agent_msg_buf.unlock();
@@ -345,9 +346,6 @@ void agent_process()
                                        agent_msg->ric.y,
                                        agent_msg->ric.z).toRotationMatrix();
 
-
-
-
             vector<cv::Point3f> point_3d;  
             vector<cv::Point2f> point_2d;
             vector<cv::Point2f> feature_2d;
@@ -370,7 +368,7 @@ void agent_process()
                 p_2d.y = agent_msg->point_2d[i].y;
                 point_2d.push_back(p_2d);
             }
-            
+
             for (unsigned int i = 0; i < agent_msg->feature_2d.size(); i++)
             {
                 cv::Point2f p_2d;
@@ -389,8 +387,8 @@ void agent_process()
                     {
                         tmp_brief[256 - 64 * (k + 1) + j] = (tmp_int & 1);
                     }
-                    point_descriptors.push_back(tmp_brief);
                 } 
+                point_descriptors.push_back(tmp_brief);
             } 
 
             for (unsigned int i = 0; i < agent_msg->feature_des.size(); i = i + 4)
@@ -403,18 +401,20 @@ void agent_process()
                     {
                         tmp_brief[256 - 64 * (k + 1) + j] = (tmp_int & 1);
                     }
-                    feature_descriptors.push_back(tmp_brief);
                 } 
+                feature_descriptors.push_back(tmp_brief);
                 //cout << i / 4 << "  "<< tmp_brief << endl;
             } 
 
             KeyFrame* keyframe = new KeyFrame(global_index, sequence_index, T, R, tic, ric, point_3d, point_2d, feature_2d, 
                                              point_descriptors, feature_descriptors);   
             global_index++;
+            
             m_process.lock();
             start_flag = 1;
             posegraph.addKeyFrame(keyframe, 1);
             m_process.unlock();
+            
             
         }
         std::chrono::milliseconds dura(5);
@@ -472,6 +472,7 @@ void process()
             //printf(" point time %f \n", point_msg->header.stamp.toSec());
             //printf(" image time %f \n", image_msg->header.stamp.toSec());
             // skip fisrt few
+            /*
             if (skip_first_cnt < SKIP_FIRST_CNT)
             {
                 skip_first_cnt++;
@@ -487,7 +488,7 @@ void process()
             {
                 skip_cnt = 0;
             }
-
+            */
             cv_bridge::CvImageConstPtr ptr;
             if (image_msg->encoding == "8UC1")
             {
@@ -513,7 +514,7 @@ void process()
                                      pose_msg->pose.pose.orientation.x,
                                      pose_msg->pose.pose.orientation.y,
                                      pose_msg->pose.pose.orientation.z).toRotationMatrix();
-            if((T - last_t).norm() > SKIP_DIS)
+            if((T - last_t).norm() >= SKIP_DIS)
             {
                 vector<cv::Point3f> point_3d; 
                 vector<cv::Point2f> point_2d_uv; 
@@ -541,15 +542,16 @@ void process()
 
                     //printf("u %f, v %f \n", p_2d_uv.x, p_2d_uv.y);
                 }
-
                 KeyFrame* keyframe = new KeyFrame(pose_msg->header.stamp.toSec(), frame_index, T, R, tic, ric, image,
                                    point_3d, point_2d_uv, point_2d_normal, point_id, sequence);   
+                frame_index++;
+                
                 m_process.lock();
                 start_flag = 1;
                 posegraph.addKeyFrame(keyframe, 1);
                 m_process.unlock();
-                frame_index++;
                 last_t = T;
+                
             }
         }
 
