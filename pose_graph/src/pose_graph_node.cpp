@@ -77,7 +77,6 @@ double last_image_time = -1;
 
 queue<agent_msg::AgentMsgConstPtr> agent_msg_buf;
 std::mutex m_agent_msg_buf;
-int global_index = 0;
 
 void new_sequence()
 {
@@ -328,8 +327,7 @@ void agent_process()
         if(agent_msg != NULL)
         {
             // build keyframe
-            //int sequence_index = agent_msg->seq;
-            int sequence_index = 1;
+            int sequence_index = agent_msg->seq;
             Vector3d T = Vector3d(agent_msg->position_imu.x,
                                   agent_msg->position_imu.y,
                                   agent_msg->position_imu.z);
@@ -406,10 +404,8 @@ void agent_process()
                 //cout << i / 4 << "  "<< tmp_brief << endl;
             } 
 
-            KeyFrame* keyframe = new KeyFrame(global_index, sequence_index, T, R, tic, ric, point_3d, point_2d, feature_2d, 
-                                             point_descriptors, feature_descriptors);   
-            global_index++;
-            
+            KeyFrame* keyframe = new KeyFrame(sequence_index, T, R, tic, ric, point_3d, point_2d, feature_2d, 
+                                             point_descriptors, feature_descriptors);               
             m_process.lock();
             start_flag = 1;
             posegraph.addKeyFrame(keyframe, 1);

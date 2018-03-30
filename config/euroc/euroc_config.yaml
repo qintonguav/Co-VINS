@@ -81,4 +81,4 @@ save_image: 0                   # save image in pose graph for visualization pru
 visualize_imu_forward: 0        # output imu forward propogation to achieve low latency and high frequence results
 visualize_camera_size: 0.4      # size of camera marker in RVIZ
 
-swarm_agent: 1
+swarm_agent: 0

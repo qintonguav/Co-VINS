@@ -39,8 +39,8 @@ public:
 	KeyFrame(double _time_stamp, int _index, Vector3d &_vio_T_w_i, Matrix3d &_vio_R_w_i, Vector3d &_T_w_i, Matrix3d &_R_w_i,
 			 cv::Mat &_image, int _loop_index, Eigen::Matrix<double, 8, 1 > &_loop_info,
 			 vector<cv::KeyPoint> &_keypoints, vector<cv::Point2f> &_feature_2d, vector<BRIEF::bitset> &_feature_des);
-	KeyFrame(int _index, int _seq, Vector3d &_vio_T_w_i, Matrix3d &_vio_R_w_i, Vector3d &_tic, Matrix3d &_ric,
-			vector<cv::Point3f> &_point_3d, vector<cv::Point2f> &_point_2d,
+	KeyFrame(int _seq, Vector3d &_vio_T_w_i, Matrix3d &_vio_R_w_i, Vector3d &_tic, Matrix3d &_ric,
+			 vector<cv::Point3f> &_point_3d, vector<cv::Point2f> &_point_2d,
 			 vector<cv::Point2f> &_feature_2d, vector<BRIEF::bitset> &_point_des, vector<BRIEF::bitset> &_feature_des);
 	bool findConnection(KeyFrame* old_kf);
 	void computeWindowBRIEFPoint();
