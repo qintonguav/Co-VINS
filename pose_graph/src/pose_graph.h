@@ -88,10 +88,11 @@ private:
 	ros::Publisher pub_path[10];
 
 	//swarm variable
-	map<int, vector<int>> sequence_index_map;
 	map<int, bool> sequence_align_world;
 	map<int, Eigen::Vector3d> sequence_t_drift_map;
+	map<int, Eigen::Vector3d> sequence_w_t_s_map;
 	map<int, Eigen::Matrix3d> sequence_r_drift_map;
+	map<int, Eigen::Matrix3d> sequence_w_r_s_map;
 	vector<KeyFrame*> keyframe_vec;
 };
 

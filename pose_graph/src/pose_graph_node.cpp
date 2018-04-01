@@ -408,7 +408,8 @@ void agent_process()
                                              point_descriptors, feature_descriptors);               
             m_process.lock();
             start_flag = 1;
-            posegraph.addKeyFrame(keyframe, 1);
+            //posegraph.addKeyFrame(keyframe, 1);
+            posegraph.addAgentFrame(keyframe);
             m_process.unlock();
             
             
