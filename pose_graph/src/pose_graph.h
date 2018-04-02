@@ -39,25 +39,16 @@ public:
 	PoseGraph();
 	~PoseGraph();
 	void registerPub(ros::NodeHandle &n);
-	void addKeyFrame(KeyFrame* cur_kf, bool flag_detect_loop);
 	void addAgentFrame(KeyFrame* cur_kf);
 	void loadKeyFrame(KeyFrame* cur_kf, bool flag_detect_loop);
 	void loadVocabulary(std::string voc_path);
-	void updateKeyFrameLoop(int index, Eigen::Matrix<double, 8, 1 > &_loop_info);
 	KeyFrame* getKeyFrame(int index);
 	nav_msgs::Path path[10];
 	nav_msgs::Path base_path;
 	CameraPoseVisualization* posegraph_visualization;
-	void savePoseGraph();
-	void loadPoseGraph();
+	//void savePoseGraph();
+	//void loadPoseGraph();
 	void publish();
-	Vector3d t_drift;
-	double yaw_drift;
-	Matrix3d r_drift;
-	// world frame( base sequence or first sequence)<----> cur sequence frame  
-	Vector3d w_t_vio;
-	Matrix3d w_r_vio;
-
 
 private:
 	int detectLoop(KeyFrame* keyframe, int frame_index);

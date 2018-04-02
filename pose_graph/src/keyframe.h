@@ -19,33 +19,18 @@ using namespace Eigen;
 using namespace std;
 using namespace DVision;
 
-
-class BriefExtractor
-{
-public:
-  virtual void operator()(const cv::Mat &im, vector<cv::KeyPoint> &keys, vector<BRIEF::bitset> &descriptors) const;
-  BriefExtractor(const std::string &pattern_file);
-
-  DVision::BRIEF m_brief;
-};
-
 class KeyFrame
 {
 public:
-	KeyFrame(double _time_stamp, int _index, Vector3d &_vio_T_w_i, Matrix3d &_vio_R_w_i, 
-			 Vector3d &_tic, Matrix3d &_ric, cv::Mat &_image,
-			 vector<cv::Point3f> &_point_3d, vector<cv::Point2f> &_point_uv, vector<cv::Point2f> &_point_2d, 
-			 vector<double> &_point_id, int _sequence);
+	/*
 	KeyFrame(double _time_stamp, int _index, Vector3d &_vio_T_w_i, Matrix3d &_vio_R_w_i, Vector3d &_T_w_i, Matrix3d &_R_w_i,
 			 cv::Mat &_image, int _loop_index, Eigen::Matrix<double, 8, 1 > &_loop_info,
 			 vector<cv::KeyPoint> &_keypoints, vector<cv::Point2f> &_feature_2d, vector<BRIEF::bitset> &_feature_des);
+	*/
 	KeyFrame(int _seq, Vector3d &_vio_T_w_i, Matrix3d &_vio_R_w_i, Vector3d &_tic, Matrix3d &_ric,
 			 vector<cv::Point3f> &_point_3d, vector<cv::Point2f> &_point_2d,
 			 vector<cv::Point2f> &_feature_2d, vector<BRIEF::bitset> &_point_des, vector<BRIEF::bitset> &_feature_des);
 	bool findConnection(KeyFrame* old_kf);
-	void computeWindowBRIEFPoint();
-	void computeBRIEFPoint();
-	//void extractBrief();
 	int HammingDis(const BRIEF::bitset &a, const BRIEF::bitset &b);
 	bool searchInAera(const BRIEF::bitset window_descriptor,
 	                  const std::vector<BRIEF::bitset> &descriptors_old,
@@ -55,9 +40,6 @@ public:
                           std::vector<uchar> &status,
                           const std::vector<BRIEF::bitset> &descriptors_old,
                           const std::vector<cv::Point2f> &feature_2d_old);
-	void FundmantalMatrixRANSAC(const std::vector<cv::Point2f> &matched_2d_cur,
-                                const std::vector<cv::Point2f> &matched_2d_old,
-                                vector<uchar> &status);
 	void PnPRANSAC(const vector<cv::Point2f> &matched_2d_old,
 	               const std::vector<cv::Point3f> &matched_3d,
 	               std::vector<uchar> &status,
