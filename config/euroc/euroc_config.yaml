@@ -1,8 +1,8 @@
 %YAML:1.0
 
 #common parameters
-imu_topic: "/imu0"
-image_topic: "/cam0/image_raw"
+imu_topic: "imu0"
+image_topic: "cam0/image_raw"
 output_path: "/home/tony-ws1/output/"
 
 #camera calibration 

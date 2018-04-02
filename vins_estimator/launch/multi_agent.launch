@@ -1,20 +1,38 @@
 <launch>
  
-    <group ns="agent0">
+    <group ns="agent1">
     <include file="$(find vins_estimator)/launch/agent.launch">
         <arg name="config_path" default = "$(find feature_tracker)/../config/euroc/euroc_config.yaml" />
         <arg name="vins_path" default = "$(find feature_tracker)/../config/../" />
         <arg name="agent_serial" value="1" /> 
     </include>
+    <arg name="sequence_name" default = "MH_01_easy" />
+    <node pkg="rosbag" type="play" name="player" output="log" 
+    args="/home/tony-ws1/bag/ijrr_euroc_mav_dataset/$(arg sequence_name)/$(arg sequence_name).bag -r 2 /imu0:=imu0 /cam0/image_raw:=cam0/image_raw" />
     </group>
 
-<!--     <group ns="agent1">
+    <group ns="agent2">
     <include file="$(find vins_estimator)/launch/agent.launch">
         <arg name="config_path" default = "$(find feature_tracker)/../config/euroc/euroc_config.yaml" />
         <arg name="vins_path" default = "$(find feature_tracker)/../config/../" />
         <arg name="agent_serial" value="2" /> 
     </include>
-    </group> -->
+    <arg name="sequence_name" default = "MH_02_easy" />
+    <node pkg="rosbag" type="play" name="player" output="log" 
+    args="/home/tony-ws1/bag/ijrr_euroc_mav_dataset/$(arg sequence_name)/$(arg sequence_name).bag -r 2 /imu0:=imu0 /cam0/image_raw:=cam0/image_raw" />
+    </group>
+
+    <group ns="agent3">
+    <include file="$(find vins_estimator)/launch/agent.launch">
+        <arg name="config_path" default = "$(find feature_tracker)/../config/euroc/euroc_config.yaml" />
+        <arg name="vins_path" default = "$(find feature_tracker)/../config/../" />
+        <arg name="agent_serial" value="3" /> 
+    </include>
+    <arg name="sequence_name" default = "MH_03_medium" />
+    <node pkg="rosbag" type="play" name="player" output="log" 
+    args="/home/tony-ws1/bag/ijrr_euroc_mav_dataset/$(arg sequence_name)/$(arg sequence_name).bag -r 2 /imu0:=imu0 /cam0/image_raw:=cam0/image_raw" />
+    </group>
+    
 <!--     <arg name="config_path" default = "$(find feature_tracker)/../config/euroc/euroc_config.yaml" />
     <node name="pose_graph" pkg="pose_graph" type="pose_graph" output="screen">
         <param name="config_file" type="string" value="$(arg config_path)" />

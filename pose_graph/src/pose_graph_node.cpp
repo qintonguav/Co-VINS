@@ -327,7 +327,7 @@ void agent_process()
         if(agent_msg != NULL)
         {
             // build keyframe
-            int sequence_index = agent_msg->seq;
+            int sequence = agent_msg->seq;
             Vector3d T = Vector3d(agent_msg->position_imu.x,
                                   agent_msg->position_imu.y,
                                   agent_msg->position_imu.z);
@@ -404,7 +404,7 @@ void agent_process()
                 //cout << i / 4 << "  "<< tmp_brief << endl;
             } 
 
-            KeyFrame* keyframe = new KeyFrame(sequence_index, T, R, tic, ric, point_3d, point_2d, feature_2d, 
+            KeyFrame* keyframe = new KeyFrame(sequence, T, R, tic, ric, point_3d, point_2d, feature_2d, 
                                              point_descriptors, feature_descriptors);               
             m_process.lock();
             start_flag = 1;

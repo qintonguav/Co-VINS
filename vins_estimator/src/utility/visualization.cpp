@@ -24,19 +24,19 @@ static Vector3d last_path(0.0, 0.0, 0.0);
 
 void registerPub(ros::NodeHandle &n)
 {
-    pub_latest_odometry = n.advertise<nav_msgs::Odometry>("/vins_estimator/imu_propagate", 1000);
-    pub_path = n.advertise<nav_msgs::Path>("/vins_estimator/path", 1000);
-    pub_relo_path = n.advertise<nav_msgs::Path>("/vins_estimator/relocalization_path", 1000);
-    pub_odometry = n.advertise<nav_msgs::Odometry>("/vins_estimator/odometry", 1000);
-    pub_point_cloud = n.advertise<sensor_msgs::PointCloud>("/vins_estimator/point_cloud", 1000);
-    pub_margin_cloud = n.advertise<sensor_msgs::PointCloud>("/vins_estimator/history_cloud", 1000);
-    pub_key_poses = n.advertise<visualization_msgs::Marker>("/vins_estimator/key_poses", 1000);
-    pub_camera_pose = n.advertise<nav_msgs::Odometry>("/vins_estimator/camera_pose", 1000);
-    pub_camera_pose_visual = n.advertise<visualization_msgs::MarkerArray>("/vins_estimator/camera_pose_visual", 1000);
-    pub_keyframe_pose = n.advertise<nav_msgs::Odometry>("/vins_estimator/keyframe_pose", 1000);
-    pub_keyframe_point = n.advertise<sensor_msgs::PointCloud>("/vins_estimator/keyframe_point", 1000);
-    pub_extrinsic = n.advertise<nav_msgs::Odometry>("/vins_estimator/extrinsic", 1000);
-    pub_relo_relative_pose=  n.advertise<nav_msgs::Odometry>("/vins_estimator/relo_relative_pose", 1000);
+    pub_latest_odometry = n.advertise<nav_msgs::Odometry>("vins_estimator/imu_propagate", 1000);
+    pub_path = n.advertise<nav_msgs::Path>("vins_estimator/path", 1000);
+    pub_relo_path = n.advertise<nav_msgs::Path>("vins_estimator/relocalization_path", 1000);
+    pub_odometry = n.advertise<nav_msgs::Odometry>("vins_estimator/odometry", 1000);
+    pub_point_cloud = n.advertise<sensor_msgs::PointCloud>("vins_estimator/point_cloud", 1000);
+    pub_margin_cloud = n.advertise<sensor_msgs::PointCloud>("vins_estimator/history_cloud", 1000);
+    pub_key_poses = n.advertise<visualization_msgs::Marker>("vins_estimator/key_poses", 1000);
+    pub_camera_pose = n.advertise<nav_msgs::Odometry>("vins_estimator/camera_pose", 1000);
+    pub_camera_pose_visual = n.advertise<visualization_msgs::MarkerArray>("vins_estimator/camera_pose_visual", 1000);
+    pub_keyframe_pose = n.advertise<nav_msgs::Odometry>("vins_estimator/keyframe_pose", 1000);
+    pub_keyframe_point = n.advertise<sensor_msgs::PointCloud>("vins_estimator/keyframe_point", 1000);
+    pub_extrinsic = n.advertise<nav_msgs::Odometry>("vins_estimator/extrinsic", 1000);
+    pub_relo_relative_pose=  n.advertise<nav_msgs::Odometry>("vins_estimator/relo_relative_pose", 1000);
     pub_agent_frame = n.advertise<agent_msg::AgentMsg>("/vins_estimator/agent_frame", 1000);
 
     cameraposevisual.setScale(1);
@@ -69,7 +69,7 @@ void printStatistics(const Estimator &estimator, double t)
 {
     if (estimator.solver_flag != Estimator::SolverFlag::NON_LINEAR)
         return;
-    printf("position: %f, %f, %f\r", estimator.Ps[WINDOW_SIZE].x(), estimator.Ps[WINDOW_SIZE].y(), estimator.Ps[WINDOW_SIZE].z());
+    //printf("position: %f, %f, %f \r", estimator.Ps[WINDOW_SIZE].x(), estimator.Ps[WINDOW_SIZE].y(), estimator.Ps[WINDOW_SIZE].z());
     ROS_DEBUG_STREAM("position: " << estimator.Ps[WINDOW_SIZE].transpose());
     ROS_DEBUG_STREAM("orientation: " << estimator.Vs[WINDOW_SIZE].transpose());
     for (int i = 0; i < NUM_OF_CAM; i++)
@@ -482,7 +482,7 @@ void pubAgentFrame(const Estimator &estimator, const cv::Mat &image, camodocal::
         else
         {
             vector<cv::Point2f> tmp_pts;
-            cv::goodFeaturesToTrack(image, tmp_pts, 1000, 0.01, 10);
+            cv::goodFeaturesToTrack(image, tmp_pts, 1500, 0.01, 5);
             for(int i = 0; i < (int)tmp_pts.size(); i++)
             {
                 cv::KeyPoint key;
@@ -492,6 +492,7 @@ void pubAgentFrame(const Estimator &estimator, const cv::Mat &image, camodocal::
         }
         vector<BRIEF::bitset> brief_descriptors, window_brief_descriptors;
         extractor(image, keypoints_uv, brief_descriptors);
+        cout << "key point size" << keypoints_uv.size() << endl;
 
         
         for (int i = 0; i < (int)keypoints_uv.size(); i++)

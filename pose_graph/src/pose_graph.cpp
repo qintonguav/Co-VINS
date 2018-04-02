@@ -87,7 +87,7 @@ void PoseGraph::addAgentFrame(KeyFrame* cur_kf)
             // shift vio pose of whole sequence to the world frame
             if (old_kf->sequence != cur_kf->sequence && sequence_align_world[sequence] == 0 && sequence_align_world[old_kf->sequence] == 1)
             {  
-                sequence_align_world[sequence] == 1;
+                sequence_align_world[sequence] = 1;
                 Vector3d w_P_old, w_P_cur, vio_P_cur;
                 Matrix3d w_R_old, w_R_cur, vio_R_cur;
                 old_kf->getVioPose(w_P_old, w_R_old);
