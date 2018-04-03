@@ -585,6 +585,7 @@ void PoseGraph::optimize4DoF()
             }
             m_keyframelist.unlock();
             updatePath();
+            publishTF();
         }
 
         std::chrono::milliseconds dura(2000);
@@ -898,3 +899,34 @@ void PoseGraph::publish()
     pub_base_path.publish(base_path);
     //posegraph_visualization->publish_by(pub_pose_graph, path[sequence_cnt].header);
 }
+
+void PoseGraph::publishTF()
+{
+    static tf::TransformBroadcaster br;
+    tf::Transform transform;
+    tf::Quaternion q;
+    
+    map<int, bool>::iterator iter;
+    for (iter = sequence_align_world.begin(); iter != sequence_align_world.end(); iter++)
+    {
+        if (iter->second)
+        {
+            int sequence = iter->first;
+
+            Vector3d TF_t;
+            Quaterniond TF_q;
+            TF_q = sequence_r_drift_map[sequence] * sequence_w_r_s_map[sequence];
+            TF_t = sequence_r_drift_map[sequence] * sequence_w_t_s_map[sequence] + sequence_t_drift_map[sequence];
+
+            transform.setOrigin(tf::Vector3(TF_t(0), TF_t(1), TF_t(2)));
+            q.setW(TF_q.w());
+            q.setX(TF_q.x());
+            q.setY(TF_q.y());
+            q.setZ(TF_q.z());
+            transform.setRotation(q);
+            br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "world", to_string(sequence)));
+        }
+    }
+}
+
+

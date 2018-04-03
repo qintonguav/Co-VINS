@@ -24,7 +24,7 @@
 #include "ThirdParty/DVision/DVision.h"
 #include "ThirdParty/DBoW/TemplatedDatabase.h"
 #include "ThirdParty/DBoW/TemplatedVocabulary.h"
-
+#include <tf/transform_broadcaster.h>
 
 #define SHOW_S_EDGE false
 #define SHOW_L_EDGE true
@@ -49,6 +49,7 @@ public:
 	//void savePoseGraph();
 	//void loadPoseGraph();
 	void publish();
+	void publishTF();
 
 private:
 	int detectLoop(KeyFrame* keyframe, int frame_index);

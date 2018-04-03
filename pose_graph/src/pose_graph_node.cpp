@@ -20,7 +20,6 @@ backward::SignalHandling sh;
 #include "pose_graph.h"
 #include "parameters.h"
 #include <agent_msg/AgentMsg.h>
-#include <nav_msgs/Odometry.h>
 #include "ThirdParty/DVision/DVision.h"
 
 using namespace std;
@@ -44,7 +43,6 @@ std::string VINS_RESULT_PATH;
 
 queue<agent_msg::AgentMsgConstPtr> agent_msg_buf;
 std::mutex m_agent_msg_buf;
-ros::Publisher pub_transformation;
 
 /*
 void new_sequence()

@@ -8,7 +8,7 @@ Panels:
         - /VIO21/Path1
         - /VIO31
         - /VIO31/Path1
-        - /raw_image31
+        - /TF1/Frames1
       Splitter Ratio: 0.465115994
     Tree Height: 206
   - Class: rviz/Selection
@@ -29,14 +29,14 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: current_point
+    SyncSource: raw_image1
   - Class: rviz/Displays
     Help Height: 78
     Name: Displays
     Property Tree Widget:
       Expanded: ~
       Splitter Ratio: 0.5
-    Tree Height: 337
+    Tree Height: 359
 Visualization Manager:
   Class: ""
   Displays:
@@ -555,6 +555,20 @@ Visualization Manager:
       Transport Hint: raw
       Unreliable: false
       Value: true
+    - Class: rviz/TF
+      Enabled: false
+      Frame Timeout: 15
+      Frames:
+        All Enabled: true
+      Marker Scale: 1
+      Name: TF
+      Show Arrows: true
+      Show Axes: true
+      Show Names: true
+      Tree:
+        {}
+      Update Interval: 0
+      Value: false
   Enabled: true
   Global Options:
     Background Color: 0; 0; 0
@@ -577,15 +591,15 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/XYOrbit
-      Distance: 63.3623161
+      Distance: 28.5344372
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 1.21141016
-        Y: -0.89008069
+        X: 10.1878386
+        Y: -3.51616096
         Z: -6.67572021e-06
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.0500000007
@@ -595,7 +609,7 @@ Visualization Manager:
       Pitch: 1.56979632
       Target Frame: <Fixed Frame>
       Value: XYOrbit (rviz)
-      Yaw: 4.65854645
+      Yaw: 4.68354702
     Saved: ~
 Window Geometry:
   Displays:
@@ -613,7 +627,7 @@ Window Geometry:
   Views:
     collapsed: true
   Width: 1390
-  X: 2130
+  X: 530
   Y: 98
   loop_match_image:
     collapsed: false
