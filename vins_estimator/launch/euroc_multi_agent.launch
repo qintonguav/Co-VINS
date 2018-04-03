@@ -8,7 +8,7 @@
     </include>
     <arg name="sequence_name" default = "MH_01_easy" />
     <node pkg="rosbag" type="play" name="player" output="log" 
-    args="/home/tony-ws1/bag/ijrr_euroc_mav_dataset/$(arg sequence_name)/$(arg sequence_name).bag -r 2 /imu0:=imu0 /cam0/image_raw:=cam0/image_raw" />
+    args="/home/tony-ws1/bag/ijrr_euroc_mav_dataset/$(arg sequence_name)/$(arg sequence_name).bag  /imu0:=imu0 /cam0/image_raw:=cam0/image_raw" />
     </group>
 
     <group ns="agent2">
@@ -19,7 +19,7 @@
     </include>
     <arg name="sequence_name" default = "MH_02_easy" />
     <node pkg="rosbag" type="play" name="player" output="log" 
-    args="/home/tony-ws1/bag/ijrr_euroc_mav_dataset/$(arg sequence_name)/$(arg sequence_name).bag -r 2 /imu0:=imu0 /cam0/image_raw:=cam0/image_raw" />
+    args="/home/tony-ws1/bag/ijrr_euroc_mav_dataset/$(arg sequence_name)/$(arg sequence_name).bag  /imu0:=imu0 /cam0/image_raw:=cam0/image_raw" />
     </group>
 
     <group ns="agent3">
@@ -30,7 +30,7 @@
     </include>
     <arg name="sequence_name" default = "MH_03_medium" />
     <node pkg="rosbag" type="play" name="player" output="log" 
-    args="/home/tony-ws1/bag/ijrr_euroc_mav_dataset/$(arg sequence_name)/$(arg sequence_name).bag -r 2 /imu0:=imu0 /cam0/image_raw:=cam0/image_raw" />
+    args="/home/tony-ws1/bag/ijrr_euroc_mav_dataset/$(arg sequence_name)/$(arg sequence_name).bag  /imu0:=imu0 /cam0/image_raw:=cam0/image_raw" />
     </group>
     
 <!--     <arg name="config_path" default = "$(find feature_tracker)/../config/euroc/euroc_config.yaml" />

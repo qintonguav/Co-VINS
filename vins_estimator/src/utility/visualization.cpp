@@ -482,7 +482,7 @@ void pubAgentFrame(const Estimator &estimator, const cv::Mat &image, camodocal::
         else
         {
             vector<cv::Point2f> tmp_pts;
-            cv::goodFeaturesToTrack(image, tmp_pts, 1500, 0.01, 5);
+            cv::goodFeaturesToTrack(image, tmp_pts, 1000, 0.01, 5);
             for(int i = 0; i < (int)tmp_pts.size(); i++)
             {
                 cv::KeyPoint key;

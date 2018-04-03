@@ -1,8 +1,8 @@
 %YAML:1.0
 
 #common parameters
-imu_topic: "/camera/imu/data_raw"
-image_topic: "/camera/fisheye/image_raw"
+imu_topic: "camera/imu/data_raw"
+image_topic: "camera/fisheye/image_raw"
 output_path: "/home/tony-ws1/output/"
 
 #camera calibration 
@@ -79,3 +79,5 @@ rolling_shutter_tr: 0               # unit: s. rolling shutter read out time per
 save_image: 1                   # save image in pose graph for visualization prupose; you can close this function by setting 0 
 visualize_imu_forward: 0        # output imu forward propogation to achieve low latency and high frequence results
 visualize_camera_size: 0.4      # size of camera marker in RVIZ
+
+swarm_agent: 1

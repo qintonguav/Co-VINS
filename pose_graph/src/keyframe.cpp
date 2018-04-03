@@ -184,9 +184,9 @@ bool KeyFrame::findConnection(KeyFrame* old_kf)
 	vector<uchar> status;
 	matched_3d = point_3d;
 
-	TicToc t_match;
-
+	//TicToc t_des;
 	searchByBRIEFDes(matched_2d_old, status, old_kf->feature_des, old_kf->feature_2d);
+	//printf("des search time %f \n", t_des.toc());
 	reduceVector(matched_2d_old, status);
 	reduceVector(matched_3d, status);
 
@@ -200,7 +200,9 @@ bool KeyFrame::findConnection(KeyFrame* old_kf)
 	if ((int)matched_3d.size() > MIN_LOOP_NUM)
 	{
 		status.clear();
+		//TicToc t_pnp;
 	    PnPRANSAC(matched_2d_old, matched_3d, status, PnP_T_old, PnP_R_old);
+	    //printf("pnp time %f \n", t_pnp.toc());
 	    PnP_R_old = PnP_R_old * old_kf->ric.transpose();
 	    PnP_T_old = PnP_T_old - PnP_R_old * old_kf->tic;
 	    
@@ -213,12 +215,12 @@ bool KeyFrame::findConnection(KeyFrame* old_kf)
 	    relative_t = PnP_R_old.transpose() * (origin_vio_T - PnP_T_old);
 	    relative_q = PnP_R_old.transpose() * origin_vio_R;
 	    relative_yaw = Utility::normalizeAngle(Utility::R2ypr(origin_vio_R).x() - Utility::R2ypr(PnP_R_old).x());
-	    //printf("PNP relative\n");
-	    //cout << "pnp relative_t " << relative_t.transpose() << endl;
-	    //cout << "pnp relative_yaw " << relative_yaw << endl;
-	    if (abs(relative_yaw) < 30.0 && relative_t.norm() < 20.0)
+	    if (abs(relative_yaw) < 15.0 && relative_t.norm() < 2.0)
 	    {
-
+	    	printf("PNP relative\n");
+	    	cout << "inlier num " << matched_3d.size() << endl;
+	    	cout << "pnp relative_t " << relative_t.transpose() << endl;
+	    	cout << "pnp relative_yaw " << relative_yaw << endl;
 	    	has_loop = true;
 	    	loop_index = old_kf->index;
 	    	loop_info << relative_t.x(), relative_t.y(), relative_t.z(),

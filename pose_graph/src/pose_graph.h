@@ -79,6 +79,7 @@ private:
 	ros::Publisher pub_path[10];
 
 	//swarm variable
+	int first_sequence;
 	map<int, bool> sequence_align_world;
 	map<int, Eigen::Vector3d> sequence_t_drift_map;
 	map<int, Eigen::Vector3d> sequence_w_t_s_map;

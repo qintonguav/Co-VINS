@@ -51,6 +51,7 @@ bool init_feature = 0;
 bool init_imu = 1;
 double last_imu_t = 0;
 
+
 camodocal::CameraPtr m_camera;
 std::string BRIEF_PATTERN_FILE;
 

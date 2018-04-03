@@ -40,10 +40,17 @@ void PoseGraph::addAgentFrame(KeyFrame* cur_kf)
     int sequence = cur_kf->sequence;
     if (!sequence_align_world.count(sequence))
     {
-        if (sequence == 1)
+        if (sequence_align_world.empty())
+        {
             sequence_align_world[sequence] = 1;
+            first_sequence = sequence;
+            printf("first sequence %d align world %d\n", sequence, sequence_align_world[sequence]);
+        }
         else
+        {
             sequence_align_world[sequence] = 0;
+            printf("new sequence %d align world %d\n", sequence, sequence_align_world[sequence]);
+        }
         sequence_t_drift_map[sequence] = Eigen::Vector3d(0, 0, 0);
         sequence_w_t_s_map[sequence] = Eigen::Vector3d(0, 0, 0);
         sequence_r_drift_map[sequence] = Eigen::Matrix3d::Identity();
@@ -60,20 +67,26 @@ void PoseGraph::addAgentFrame(KeyFrame* cur_kf)
 
 
     int loop_index = -1;
+    //TicToc t_detectloop;
     loop_index = detectLoop(cur_kf, cur_kf->index);
-
+    //printf("detect loop time %f\n", t_detectloop.toc());
+    bool find_connection = false;
     if (loop_index != -1)
     {
         //printf(" %d detect loop with %d \n", cur_kf->index, loop_index);
         KeyFrame* old_kf = getKeyFrame(loop_index);
-        if (cur_kf->findConnection(old_kf))
+        //TicToc t_findconnection;
+        find_connection = cur_kf->findConnection(old_kf);
+        if (find_connection)
         {
             if (earliest_loop_index > loop_index || earliest_loop_index == -1)
                 earliest_loop_index = loop_index;
 
+            ROS_WARN("find conection %d --- %d", sequence, old_kf->sequence);
             // shift vio pose of whole sequence to the world frame
             if (old_kf->sequence != cur_kf->sequence && sequence_align_world[sequence] == 0 && sequence_align_world[old_kf->sequence] == 1)
             {  
+                ROS_WARN("shift swquence %d according to %d", sequence, old_kf->sequence);
                 sequence_align_world[sequence] = 1;
                 Vector3d w_P_old, w_P_cur, vio_P_cur;
                 Matrix3d w_R_old, w_R_cur, vio_R_cur;
@@ -81,7 +94,7 @@ void PoseGraph::addAgentFrame(KeyFrame* cur_kf)
                 cur_kf->getVioPose(vio_P_cur, vio_R_cur);
 
                 Vector3d relative_t;
-                Quaterniond relative_q;
+                Matrix3d relative_q;
                 relative_t = cur_kf->getLoopRelativeT();
                 relative_q = (cur_kf->getLoopRelativeQ()).toRotationMatrix();
                 w_P_cur = w_R_old * relative_t + w_P_old;
@@ -112,12 +125,48 @@ void PoseGraph::addAgentFrame(KeyFrame* cur_kf)
                     }
                 }
             }
-            m_optimize_buf.lock();
-            optimize_buf.push(cur_kf->index);
-            m_optimize_buf.unlock();
+            if (old_kf->sequence != cur_kf->sequence && sequence_align_world[old_kf->sequence] == 0 && sequence_align_world[sequence] == 1)
+            {  
+                ROS_WARN("shift swquence %d according to %d", old_kf->sequence, sequence);
+                sequence_align_world[old_kf->sequence] = 1;
+                Vector3d w_P_old, w_P_cur, vio_P_old;
+                Matrix3d w_R_old, w_R_cur, vio_R_old;
+                old_kf->getVioPose(vio_P_old, vio_R_old);
+                cur_kf->getVioPose(w_P_cur, w_R_cur);
+
+                Vector3d relative_t;
+                Matrix3d relative_q;
+                relative_t = cur_kf->getLoopRelativeT();
+                relative_q = (cur_kf->getLoopRelativeQ()).toRotationMatrix();
+                w_P_old = -w_R_cur * relative_q.transpose() * relative_t + w_P_cur;
+                w_R_old = w_R_cur * relative_q.transpose();
+                double shift_yaw;
+                Matrix3d shift_r;
+                Vector3d shift_t; 
+                shift_yaw = Utility::R2ypr(w_R_old).x() - Utility::R2ypr(vio_R_old).x();
+                shift_r = Utility::ypr2R(Vector3d(shift_yaw, 0, 0));
+                shift_t = w_P_old - w_R_old * vio_R_old.transpose() * vio_P_old; 
+
+                sequence_w_r_s_map[old_kf->sequence] = shift_r;
+                sequence_w_t_s_map[old_kf->sequence] = shift_t;
+                for (size_t i = 0; i < keyframe_vec.size(); i++)
+                {
+                    KeyFrame* it = keyframe_vec[i];
+                    if (it->sequence == old_kf->sequence)
+                    {
+                        Vector3d vio_P;
+                        Matrix3d vio_R;
+                        (it)->getVioPose(vio_P, vio_R);
+                        vio_P = sequence_w_r_s_map[old_kf->sequence] * vio_P + sequence_w_t_s_map[old_kf->sequence];
+                        vio_R = sequence_w_r_s_map[old_kf->sequence] *  vio_R;
+                        (it)->updateVioPose(vio_P, vio_R);
+                    }
+                }
+            }
         }
+        //printf("find connection time %f\n", t_findconnection.toc());
     }
-    m_keyframelist.lock();
+    
     Vector3d P; 
     Matrix3d R;
     cur_kf->getVioPose(P, R);
@@ -197,10 +246,16 @@ void PoseGraph::addAgentFrame(KeyFrame* cur_kf)
         }
     }
     //posegraph_visualization->add_pose(P + Vector3d(VISUALIZATION_SHIFT_X, VISUALIZATION_SHIFT_Y, 0), Q);
-
+    m_keyframelist.lock();
     keyframe_vec.push_back(cur_kf);
-    publish();
     m_keyframelist.unlock();
+    publish();
+    if (find_connection)
+    {
+        m_optimize_buf.lock();
+        optimize_buf.push(cur_kf->index);
+        m_optimize_buf.unlock();
+    }
 }
 
 void PoseGraph::loadKeyFrame(KeyFrame* cur_kf, bool flag_detect_loop)
@@ -253,7 +308,7 @@ void PoseGraph::loadKeyFrame(KeyFrame* cur_kf, bool flag_detect_loop)
         for (int i = 0; i < 1; i++)
         {
             if (rit == keyframelist.rend())
-                break;
+                break;sequence_align_world[sequence] = 1
             Vector3d conncected_P;
             Matrix3d connected_R;
             if((*rit)->sequence == cur_kf->sequence)
@@ -266,7 +321,7 @@ void PoseGraph::loadKeyFrame(KeyFrame* cur_kf, bool flag_detect_loop)
     }
     */
     /*
-    if (cur_kf->has_loop)
+    if (cur_kf->has_loop)sequence_align_world
     {
         KeyFrame* connected_KF = getKeyFrame(cur_kf->loop_index);
         Vector3d connected_P;
@@ -312,11 +367,7 @@ int PoseGraph::detectLoop(KeyFrame* keyframe, int frame_index)
         {
             //if (ret[i].Score > ret[0].Score * 0.3)
             if (ret[i].Score > 0.015)
-            {          
                 find_loop = true;
-                int tmp_index = ret[i].Id;
-            }
-
         }
 /*
     if (DEBUG_IMAGE)
@@ -388,6 +439,7 @@ void PoseGraph::optimize4DoF()
 
             map<int,int> last_sequence_index;
             int i = 0;
+            bool fix_first = false;
             for (size_t k = first_looped_index; k < keyframe_vec.size(); k++)
             {
                 KeyFrame* it = keyframe_vec[k];
@@ -411,8 +463,9 @@ void PoseGraph::optimize4DoF()
                 problem.AddParameterBlock(euler_array[i], 1, angle_local_parameterization);
                 problem.AddParameterBlock(t_array[i], 3);
 
-                if ((it)->index == first_looped_index)
+                if (!fix_first && (it)->sequence == first_sequence)
                 {   
+                    fix_first = true;
                     problem.SetParameterBlockConstant(euler_array[i]);
                     problem.SetParameterBlockConstant(t_array[i]);
                 }
@@ -445,7 +498,7 @@ void PoseGraph::optimize4DoF()
                 }
 
                 //add loop edge
-                if((it)->has_loop)
+                if((it)->has_loop && sequence_align_world[(it)->sequence] == 1 && getKeyFrame((it)->loop_index)->sequence == 1)
                 {
                     assert((it)->loop_index >= first_looped_index);
                     int connected_index = getKeyFrame((it)->loop_index)->local_index;

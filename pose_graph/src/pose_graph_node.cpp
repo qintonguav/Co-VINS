@@ -20,38 +20,23 @@ backward::SignalHandling sh;
 #include "pose_graph.h"
 #include "parameters.h"
 #include <agent_msg/AgentMsg.h>
+#include <nav_msgs/Odometry.h>
 #include "ThirdParty/DVision/DVision.h"
 
 using namespace std;
 
-
 std::mutex m_buf;
 std::mutex m_process;
-int frame_index  = 0;
 int sequence = 1;
 PoseGraph posegraph;
-int skip_first_cnt = 0;
-int SKIP_CNT;
-int skip_cnt = 0;
 bool load_flag = 0;
 bool start_flag = 0;
 double SKIP_DIS = 0;
+int frame_cnt = 0;
+double t_agent = 0;
 
 int VISUALIZATION_SHIFT_X;
 int VISUALIZATION_SHIFT_Y;
-int DEBUG_IMAGE;
-int VISUALIZE_IMU_FORWARD;
-int LOOP_CLOSURE;
-int FAST_RELOCALIZATION;
-
-Eigen::Vector3d tic;
-Eigen::Matrix3d ric;
-ros::Publisher pub_match_img;
-ros::Publisher pub_match_points;
-ros::Publisher pub_camera_pose_visual;
-ros::Publisher pub_key_odometrys;
-ros::Publisher pub_vio_path;
-nav_msgs::Path no_loop_path;
 
 std::string BRIEF_PATTERN_FILE;
 std::string POSE_GRAPH_SAVE_PATH;
@@ -59,6 +44,7 @@ std::string VINS_RESULT_PATH;
 
 queue<agent_msg::AgentMsgConstPtr> agent_msg_buf;
 std::mutex m_agent_msg_buf;
+ros::Publisher pub_transformation;
 
 /*
 void new_sequence()
@@ -88,7 +74,6 @@ void new_sequence()
 
 void agent_callback(const agent_msg::AgentMsgConstPtr &agent_msg)
 {
-    //ROS_INFO("agent frame callback");
     m_agent_msg_buf.lock();
     agent_msg_buf.push(agent_msg);
     m_agent_msg_buf.unlock();
@@ -100,6 +85,8 @@ void agent_process()
     {
         agent_msg::AgentMsgConstPtr agent_msg = NULL;
         m_agent_msg_buf.lock();
+        //if ((int)agent_msg_buf.size() > 10)
+        //    printf("agent_msg buf size %d\n", agent_msg_buf.size());
         if (!agent_msg_buf.empty())
         {
             agent_msg = agent_msg_buf.front();
@@ -110,6 +97,7 @@ void agent_process()
         if(agent_msg != NULL)
         {
             // build keyframe
+            TicToc t_addframe;
             int sequence = agent_msg->seq;
             Vector3d T = Vector3d(agent_msg->position_imu.x,
                                   agent_msg->position_imu.y,
@@ -188,14 +176,14 @@ void agent_process()
             } 
 
             KeyFrame* keyframe = new KeyFrame(sequence, T, R, tic, ric, point_3d, point_2d, feature_2d, 
-                                             point_descriptors, feature_descriptors);               
+                                             point_descriptors, feature_descriptors);             
             m_process.lock();
             start_flag = 1;
-            //posegraph.addKeyFrame(keyframe, 1);
             posegraph.addAgentFrame(keyframe);
+            t_agent += t_addframe.toc();
+            frame_cnt++;
+            //printf("add agent frame time %f\n",t_agent / frame_cnt);
             m_process.unlock();
-            
-            
         }
         std::chrono::milliseconds dura(5);
         std::this_thread::sleep_for(dura);
@@ -235,7 +223,6 @@ int main(int argc, char **argv)
     // read param
     n.getParam("visualization_shift_x", VISUALIZATION_SHIFT_X);
     n.getParam("visualization_shift_y", VISUALIZATION_SHIFT_Y);
-    n.getParam("skip_cnt", SKIP_CNT);
     n.getParam("skip_dis", SKIP_DIS);
 
     std::string pkg_path = ros::package::getPath("pose_graph");
