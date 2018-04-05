@@ -28,8 +28,8 @@ public:
 			 vector<cv::KeyPoint> &_keypoints, vector<cv::Point2f> &_feature_2d, vector<BRIEF::bitset> &_feature_des);
 	*/
 	KeyFrame(int _seq, Vector3d &_vio_T_w_i, Matrix3d &_vio_R_w_i, Vector3d &_tic, Matrix3d &_ric,
-			 vector<cv::Point3f> &_point_3d, vector<cv::Point2f> &_point_2d,
-			 vector<cv::Point2f> &_feature_2d, vector<BRIEF::bitset> &_point_des, vector<BRIEF::bitset> &_feature_des);
+			 vector<cv::Point3f> &_point_3d, vector<cv::Point2f> &_feature_2d, 
+			 vector<BRIEF::bitset> &_point_des, vector<BRIEF::bitset> &_feature_des);
 	bool findConnection(KeyFrame* old_kf);
 	int HammingDis(const BRIEF::bitset &a, const BRIEF::bitset &b);
 	bool searchInAera(const BRIEF::bitset window_descriptor,
@@ -49,6 +49,7 @@ public:
 	void updatePose(const Eigen::Vector3d &_T_w_i, const Eigen::Matrix3d &_R_w_i);
 	void updateVioPose(const Eigen::Vector3d &_T_w_i, const Eigen::Matrix3d &_R_w_i);
 	void updateLoop(Eigen::Matrix<double, 8, 1 > &_loop_info);
+	void setLoop(int _loop_index, Eigen::Matrix<double, 8, 1 > &_loop_info);
 
 	Eigen::Vector3d getLoopRelativeT();
 	double getLoopRelativeYaw();
@@ -71,7 +72,6 @@ public:
 	vector<cv::Point2f> point_uv;
 	vector<cv::Point2f> point_2d;
 	vector<double> point_id;
-	vector<cv::KeyPoint> keypoints;  //feature_uv
 	vector<cv::Point2f> feature_2d;
 	vector<cv::KeyPoint> window_keypoints;
 	vector<BRIEF::bitset> feature_des;
@@ -84,13 +84,6 @@ public:
 	Eigen::Matrix<double, 8, 1 > loop_info;
 	Vector3d tic;
 	Matrix3d ric;
-
-	// swarm version
-	//vector<cv::Point3f> point_3d; 
-	//vector<cv::Point2f> point_2d;
-	//vector<cv::Point2f> feature_2d;
-	//vector<BRIEF::bitset> point_des;
-	//vector<BRIEF::bitset> feature_des;
 
 };
 

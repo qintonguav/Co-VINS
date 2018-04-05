@@ -44,7 +44,7 @@ KeyFrame::KeyFrame(double _time_stamp, int _index, Vector3d &_vio_T_w_i, Matrix3
 
 //create keyframe by agent msg
 KeyFrame::KeyFrame(int _seq, Vector3d &_vio_T_w_i, Matrix3d &_vio_R_w_i, Vector3d &_tic, Matrix3d &_ric,
-					vector<cv::Point3f> &_point_3d, vector<cv::Point2f> &_point_2d, vector<cv::Point2f> &_feature_2d, 
+					vector<cv::Point3f> &_point_3d, vector<cv::Point2f> &_feature_2d, 
 					vector<BRIEF::bitset> &_point_des, vector<BRIEF::bitset> &_feature_des)
 {
 	sequence = _seq;
@@ -56,7 +56,6 @@ KeyFrame::KeyFrame(int _seq, Vector3d &_vio_T_w_i, Matrix3d &_vio_R_w_i, Vector3
 	origin_vio_R = vio_R_w_i;
 
 	point_3d = _point_3d;
-	point_2d = _point_2d;
 	feature_2d = _feature_2d;
 	point_des = _point_des;
 	feature_des = _feature_des;
@@ -291,4 +290,13 @@ void KeyFrame::updateLoop(Eigen::Matrix<double, 8, 1 > &_loop_info)
 }
 
 
-
+void KeyFrame::setLoop(int _loop_index, Eigen::Matrix<double, 8, 1 > &_loop_info)
+{
+	if (abs(_loop_info(7)) < 30.0 && Vector3d(_loop_info(0), _loop_info(1), _loop_info(2)).norm() < 20.0)
+	{
+		has_loop = true;
+		loop_index = _loop_index;
+		//printf("update loop info\n");
+		loop_info = _loop_info;
+	}
+}

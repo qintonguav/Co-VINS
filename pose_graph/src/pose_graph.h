@@ -40,14 +40,14 @@ public:
 	~PoseGraph();
 	void registerPub(ros::NodeHandle &n);
 	void addAgentFrame(KeyFrame* cur_kf);
-	void loadKeyFrame(KeyFrame* cur_kf, bool flag_detect_loop);
+	void loadKeyFrame(KeyFrame* cur_kf);
 	void loadVocabulary(std::string voc_path);
 	KeyFrame* getKeyFrame(int index);
 	nav_msgs::Path path[10];
 	nav_msgs::Path base_path;
 	CameraPoseVisualization* posegraph_visualization;
-	//void savePoseGraph();
-	//void loadPoseGraph();
+	void savePoseGraph();
+	void loadPoseGraph();
 	void publish();
 	void publishTF();
 
@@ -69,8 +69,7 @@ private:
 	vector<bool> sequence_loop;
 	map<int, cv::Mat> image_pool;
 	int earliest_loop_index;
-	int base_sequence;
-
+	
 	BriefDatabase db;
 	BriefVocabulary* voc;
 

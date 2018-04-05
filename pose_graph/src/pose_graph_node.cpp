@@ -44,31 +44,6 @@ std::string VINS_RESULT_PATH;
 queue<agent_msg::AgentMsgConstPtr> agent_msg_buf;
 std::mutex m_agent_msg_buf;
 
-/*
-void new_sequence()
-{
-    printf("new sequence\n");
-    sequence++;
-    printf("sequence cnt %d \n", sequence);
-    if (sequence > 5)
-    {
-        ROS_WARN("only support 5 sequences since it's boring to copy code for more sequences.");
-        ROS_BREAK();
-    }
-    posegraph.posegraph_visualization->reset();
-    posegraph.publish();
-    m_buf.lock();
-    while(!image_buf.empty())
-        image_buf.pop();
-    while(!point_buf.empty())
-        point_buf.pop();
-    while(!pose_buf.empty())
-        pose_buf.pop();
-    while(!odometry_buf.empty())
-        odometry_buf.pop();
-    m_buf.unlock();
-}
-*/
 
 void agent_callback(const agent_msg::AgentMsgConstPtr &agent_msg)
 {
@@ -114,7 +89,6 @@ void agent_process()
                                        agent_msg->ric.z).toRotationMatrix();
 
             vector<cv::Point3f> point_3d;  
-            vector<cv::Point2f> point_2d;
             vector<cv::Point2f> feature_2d;
             vector<BRIEF::bitset> feature_descriptors, point_descriptors;
 
@@ -127,15 +101,6 @@ void agent_process()
                 p_3d.z = agent_msg->point_3d[i].z;
                 point_3d.push_back(p_3d);
             }
-            /*
-            for (unsigned int i = 0; i < agent_msg->point_2d.size(); i++)
-            {
-                cv::Point2f p_2d;
-                p_2d.x = agent_msg->point_2d[i].x;
-                p_2d.y = agent_msg->point_2d[i].y;
-                point_2d.push_back(p_2d);
-            }
-            */
             for (unsigned int i = 0; i < agent_msg->feature_2d.size(); i++)
             {
                 cv::Point2f p_2d;
@@ -173,7 +138,7 @@ void agent_process()
                 //cout << i / 4 << "  "<< tmp_brief << endl;
             } 
 
-            KeyFrame* keyframe = new KeyFrame(sequence, T, R, tic, ric, point_3d, point_2d, feature_2d, 
+            KeyFrame* keyframe = new KeyFrame(sequence, T, R, tic, ric, point_3d, feature_2d, 
                                              point_descriptors, feature_descriptors);             
             m_process.lock();
             start_flag = 1;
@@ -188,7 +153,7 @@ void agent_process()
     }
 }
 
-/*
+
 void command()
 {
     while(1)
@@ -199,18 +164,23 @@ void command()
             m_process.lock();
             posegraph.savePoseGraph();
             m_process.unlock();
-            printf("save pose graph finish\nyou can set 'load_previous_pose_graph' to 1 in the config file to reuse it next time\n");
-            printf("program shutting down...\n");
-            ros::shutdown();
+            printf("save pose graph finish\n you can set 'load_previous_pose_graph' to 1 in the config file to reuse it next time\n");
+            //printf("program shutting down...\n");
+            //ros::shutdown();
         }
-        if (c == 'n')
-            new_sequence();
-
+        if(c  == 'l')
+        {
+            printf("load pose graph\n");
+            m_process.lock();
+            posegraph.loadPoseGraph();
+            m_process.unlock();
+            printf("load pose graph finish\n");
+        }
         std::chrono::milliseconds dura(5);
         std::this_thread::sleep_for(dura);
     }
 }
-*/
+
 
 int main(int argc, char **argv)
 {
@@ -222,6 +192,7 @@ int main(int argc, char **argv)
     n.getParam("visualization_shift_x", VISUALIZATION_SHIFT_X);
     n.getParam("visualization_shift_y", VISUALIZATION_SHIFT_Y);
     n.getParam("skip_dis", SKIP_DIS);
+    n.getParam("pose_graph_save_path", POSE_GRAPH_SAVE_PATH);
 
     std::string pkg_path = ros::package::getPath("pose_graph");
     string vocabulary_file = pkg_path + "/../support_files/brief_k10L6.bin";
@@ -252,8 +223,8 @@ int main(int argc, char **argv)
 
     std::thread agent_frame_thread;
     agent_frame_thread = std::thread(agent_process);
-    //std::thread keyboard_command_process;
-    //keyboard_command_process = std::thread(command);
+    std::thread keyboard_command_process;
+    keyboard_command_process = std::thread(command);
 
 
     ros::spin();
