@@ -15,6 +15,7 @@ find_package(catkin REQUIRED COMPONENTS
   cv_bridge
   message_filters
   camera_model
+  tf
 )
 find_package(OpenCV REQUIRED)
 
@@ -37,7 +38,7 @@ include_directories(
 add_executable(ar_demo_node src/ar_demo_node.cpp)
 
  target_link_libraries(ar_demo_node
-   ${catkin_LIBRARIES} ${OpenCV_LIBS}
+   ${catkin_LIBRARIES} ${OpenCV_LIBS} dw
  )
 
 

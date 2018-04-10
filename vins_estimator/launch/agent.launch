@@ -8,4 +8,13 @@
     
     <node name="feature_tracker" pkg="feature_tracker" type="feature_tracker" output="log"/>
     <node name="vins_estimator" pkg="vins_estimator" type="vins_estimator" output="screen"/>
+
+    <node pkg="ar_demo" type="ar_demo_node" name="ar_demo_node" output="screen">
+        <remap from="~image_raw" to="camera/fisheye/image_raw"/>
+        <remap from="~camera_pose" to="vins_estimator/camera_pose"/>
+        <remap from="~pointcloud" to="vins_estimator/point_cloud"/>
+        <param name="calib_file" type="string" value="$(arg config_path)"/>
+        <param name="use_undistored_img" type="bool" value="false"/>
+        <param name="agent_num" type="int" value="$(arg agent_serial)" />
+    </node>
 </launch>

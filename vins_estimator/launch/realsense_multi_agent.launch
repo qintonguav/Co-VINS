@@ -6,16 +6,16 @@
         <arg name="vins_path" default = "$(find feature_tracker)/../config/../" />
         <arg name="agent_serial" value="1" /> 
     </include>
-    <node pkg="rosbag" type="play" name="player" output="log" args="/home/tony-ws1/bag/swarm_bag/a1.bag  /camera/fisheye/image_raw:=camera/fisheye/image_raw /camera/imu/data_raw/:=camera/imu/data_raw" />
+    <node pkg="rosbag" type="play" name="player" output="log" args="/home/tony-ws1/bag/swarm_bag/swarm_ar/1.bag  /camera/fisheye/image_raw:=camera/fisheye/image_raw /camera/imu/data_raw/:=camera/imu/data_raw" />
     </group>
 
-<!--     <group ns="agent2">
+    <group ns="agent2">
     <include file="$(find vins_estimator)/launch/agent.launch">
         <arg name="config_path" default = "$(find feature_tracker)/../config/realsense/realsense_fisheye_config.yaml" />
         <arg name="vins_path" default = "$(find feature_tracker)/../config/../" />
         <arg name="agent_serial" value="2" /> 
     </include>
-    <node pkg="rosbag" type="play" name="player" output="log" args="/home/tony-ws1/bag/swarm_bag/a2.bag  /camera/fisheye/image_raw:=camera/fisheye/image_raw /camera/imu/data_raw/:=camera/imu/data_raw" />
+    <node pkg="rosbag" type="play" name="player" output="log" args="/home/tony-ws1/bag/swarm_bag/swarm_ar/2.bag  /camera/fisheye/image_raw:=camera/fisheye/image_raw /camera/imu/data_raw/:=camera/imu/data_raw" />
     </group>
     
     <group ns="agent3">
@@ -24,7 +24,7 @@
         <arg name="vins_path" default = "$(find feature_tracker)/../config/../" />
         <arg name="agent_serial" value="3" /> 
     </include>
-    <node pkg="rosbag" type="play" name="player" output="log" args="/home/tony-ws1/bag/swarm_bag/a3.bag  /camera/fisheye/image_raw:=camera/fisheye/image_raw /camera/imu/data_raw/:=camera/imu/data_raw" />
-    </group> -->
+    <node pkg="rosbag" type="play" name="player" output="log" args="/home/tony-ws1/bag/swarm_bag/swarm_ar/3.bag  /camera/fisheye/image_raw:=camera/fisheye/image_raw /camera/imu/data_raw/:=camera/imu/data_raw" />
+    </group>
     
 </launch>

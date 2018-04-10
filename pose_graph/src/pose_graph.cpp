@@ -552,6 +552,7 @@ void PoseGraph::optimize4DoF()
                 sequence_r_drift_map[sequence] = Utility::ypr2R(Vector3d(yaw_drift, 0, 0));
                 sequence_t_drift_map[sequence] = cur_t - sequence_r_drift_map[sequence] * vio_t;
                 m_drift.unlock();
+                //printf("sequence %d t drift %f %f %f", sequence, sequence_t_drift_map[sequence].x(), sequence_t_drift_map[sequence].y(), sequence_t_drift_map[sequence].z());
             }
 
 
@@ -570,7 +571,6 @@ void PoseGraph::optimize4DoF()
             }
             m_keyframelist.unlock();
             updatePath();
-            publishTF();
         }
 
         std::chrono::milliseconds dura(2000);
@@ -882,6 +882,7 @@ void PoseGraph::publish()
     }
     pub_base_path.publish(base_path);
     //posegraph_visualization->publish_by(pub_pose_graph, path[sequence_cnt].header);
+    publishTF();
 }
 
 void PoseGraph::publishTF()
@@ -908,7 +909,9 @@ void PoseGraph::publishTF()
             q.setY(TF_q.y());
             q.setZ(TF_q.z());
             transform.setRotation(q);
-            br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "world", "drone_" + to_string(sequence)));
+            br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "/world", "/drone_" + to_string(sequence)));
+            //printf("%d tf t %f %f %f \n", sequence, TF_t.x(), TF_t.y(),TF_t.z());
+            //printf("%d tf q %f %f %f %f \n", sequence, TF_q.w(),TF_q.x(), TF_q.y(), TF_q.z());
         }
     }
 }

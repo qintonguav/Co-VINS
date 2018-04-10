@@ -1,3 +1,9 @@
+#define BACKWARD_HAS_DW 1
+#include <backward.hpp>
+namespace backward
+{
+backward::SignalHandling sh;
+} // namespace backward
 #include <ros/ros.h>
 #include <std_msgs/ColorRGBA.h>
 #include <visualization_msgs/Marker.h>
@@ -8,7 +14,6 @@
 #include <sensor_msgs/image_encodings.h>
 #include <sensor_msgs/PointCloud.h>
 #include <cv_bridge/cv_bridge.h>
-#include <image_transport/image_transport.h>
 #include <cmath>
 #include <opencv2/opencv.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -25,6 +30,8 @@
 #include <queue>
 #include <cmath>
 #include <algorithm> 
+#include <ros/ros.h>
+#include <tf/transform_listener.h>
 
 using namespace std;
 using namespace Eigen;
@@ -42,8 +49,7 @@ bool USE_UNDISTORED_IMG;
 bool pose_init = false;
 int img_cnt = 0;
 
-ros::Publisher object_pub;
-image_transport::Publisher pub_ARimage;
+ros::Publisher object_pub, pub_ARimage;
 Vector3d Axis[6];
 Vector3d Cube_center[3];
 vector<Vector3d> Cube_corner[3];
@@ -57,6 +63,11 @@ bool look_ground = 0;
 std_msgs::ColorRGBA line_color_r;
 std_msgs::ColorRGBA line_color_g;
 std_msgs::ColorRGBA line_color_b;
+
+tf::TransformListener* listener;
+int agent_serial;
+
+
 
 void axis_generate(visualization_msgs::Marker &line_list, Vector3d &origin, int id)
 {
@@ -358,13 +369,39 @@ void callback(const ImageConstPtr& img_msg, const nav_msgs::Odometry::ConstPtr p
         return;
     }
    //ROS_INFO("sync callback!");
-   Vector3d camera_p(pose_msg->pose.pose.position.x,
+    Vector3d camera_p(pose_msg->pose.pose.position.x,
                      pose_msg->pose.pose.position.y,
                      pose_msg->pose.pose.position.z);
-   Quaterniond camera_q(pose_msg->pose.pose.orientation.w,
+    Quaterniond camera_q(pose_msg->pose.pose.orientation.w,
                         pose_msg->pose.pose.orientation.x,
                         pose_msg->pose.pose.orientation.y,
                         pose_msg->pose.pose.orientation.z);
+
+   
+    tf::StampedTransform transform;
+    try{
+        listener->lookupTransform("/world", "/drone_" + to_string(agent_serial),
+                                ros::Time(0), transform);
+    }
+    catch (tf::TransformException &ex) {
+        ROS_WARN("no transform yet");
+        return;
+    }
+    ROS_WARN("read transform success!");
+
+    tf::Vector3 tf_t = transform.getOrigin();
+    tf::Quaternion tf_q = transform.getRotation();
+
+    Vector3d w_T_local = Vector3d(tf_t.x(), tf_t.y(), tf_t.z());
+    geometry_msgs::Quaternion g_Q;
+    tf::quaternionTFToMsg(tf_q, g_Q);   
+    Quaterniond w_Q_local(g_Q.w, g_Q.x, g_Q.y, g_Q.z);
+
+    //printf("tf t %f %f %f \n", w_T_local.x(), w_T_local.y(), w_T_local.z());
+    //printf("tf q %f %f %f %f \n", w_Q_local.w(), w_Q_local.x(), w_Q_local.y(), w_Q_local.z());
+
+    camera_q = w_Q_local * camera_q;
+    camera_p = w_Q_local * camera_p + w_T_local;
 
    //test plane
    Vector3d cam_z(0, 0, -1);
@@ -380,7 +417,22 @@ void callback(const ImageConstPtr& img_msg, const nav_msgs::Odometry::ConstPtr p
 
    project_object(camera_p, camera_q);
 
-   cv_bridge::CvImagePtr bridge_ptr = cv_bridge::toCvCopy(img_msg, sensor_msgs::image_encodings::MONO8);
+   cv_bridge::CvImageConstPtr bridge_ptr;
+   if (img_msg->encoding == "8UC1")
+   {
+       sensor_msgs::Image img;
+       img.header = img_msg->header;
+       img.height = img_msg->height;
+       img.width = img_msg->width;
+       img.is_bigendian = img_msg->is_bigendian;
+       img.step = img_msg->step;
+       img.data = img_msg->data;
+       img.encoding = "mono8";
+       bridge_ptr = cv_bridge::toCvCopy(img, sensor_msgs::image_encodings::MONO8);
+   }
+   else
+       bridge_ptr = cv_bridge::toCvCopy(img_msg, sensor_msgs::image_encodings::MONO8);
+
    cv::Mat AR_image;
    AR_image = bridge_ptr->image.clone();
    cv::cvtColor(AR_image, AR_image, cv::COLOR_GRAY2RGB);
@@ -484,6 +536,8 @@ int main( int argc, char** argv )
     ros::NodeHandle n("~");
     object_pub = n.advertise<visualization_msgs::MarkerArray>("AR_object", 10);
     n.getParam("use_undistored_img", USE_UNDISTORED_IMG);
+    n.getParam("agent_num", agent_serial);
+    printf("agent serial %d \n", agent_serial);
     ros::Subscriber sub_img;
     if (USE_UNDISTORED_IMG)
     {
@@ -508,15 +562,14 @@ int main( int argc, char** argv )
     Axis[4]= Vector3d(5, 10, -5);
     Axis[5] = Vector3d(0, 10, -1);
 
-    Cube_center[0] = Vector3d(-2, 0, -1.2 + box_length / 2.0);
+    Cube_center[0] = Vector3d(-1, 2.5, -1.2 + box_length / 2.0);
     //Cube_center[0] = Vector3d(0, 3, -1.2 + box_length / 2.0);
     Cube_center[1] = Vector3d(4, -2, -1.2 + box_length / 2.0);
     Cube_center[2] = Vector3d(0, -2, -1.2 + box_length / 2.0);
 
     ros::Subscriber pose_img = n.subscribe("camera_pose", 100, pose_callback);
     ros::Subscriber sub_point = n.subscribe("pointcloud", 2000, point_callback);
-    image_transport::ImageTransport it(n);
-    pub_ARimage = it.advertise("AR_image", 1000);
+    pub_ARimage = n.advertise<sensor_msgs::Image>("AR_image",1000);
 
     line_color_r.r = 1.0;
     line_color_r.a = 1.0;
@@ -530,10 +583,15 @@ int main( int argc, char** argv )
     ROS_INFO("reading paramerter of camera %s", calib_file.c_str());
     m_camera = CameraFactory::instance()->generateCameraFromYamlFile(calib_file);
 
+    listener = new tf::TransformListener(n);
+
     ros::Rate r(100);
     ros::Duration(1).sleep();
     add_object();
     add_object();
+
     ros::spin();
+
+    delete listener;
 }
 
