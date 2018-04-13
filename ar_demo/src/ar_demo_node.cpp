@@ -1,9 +1,3 @@
-#define BACKWARD_HAS_DW 1
-#include <backward.hpp>
-namespace backward
-{
-backward::SignalHandling sh;
-} // namespace backward
 #include <ros/ros.h>
 #include <std_msgs/ColorRGBA.h>
 #include <visualization_msgs/Marker.h>

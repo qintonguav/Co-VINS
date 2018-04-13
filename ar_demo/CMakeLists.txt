@@ -38,7 +38,7 @@ include_directories(
 add_executable(ar_demo_node src/ar_demo_node.cpp)
 
  target_link_libraries(ar_demo_node
-   ${catkin_LIBRARIES} ${OpenCV_LIBS} dw
+   ${catkin_LIBRARIES} ${OpenCV_LIBS}
  )
 
 
