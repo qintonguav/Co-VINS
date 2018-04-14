@@ -37,7 +37,7 @@ void registerPub(ros::NodeHandle &n)
     pub_keyframe_point = n.advertise<sensor_msgs::PointCloud>("vins_estimator/keyframe_point", 1000);
     pub_extrinsic = n.advertise<nav_msgs::Odometry>("vins_estimator/extrinsic", 1000);
     pub_relo_relative_pose=  n.advertise<nav_msgs::Odometry>("vins_estimator/relo_relative_pose", 1000);
-    pub_agent_frame = n.advertise<agent_msg::AgentMsg>("/vins_estimator/agent_frame", 1000);
+    pub_agent_frame = n.advertise<agent_msg::AgentMsg>("/agent_frame", 1000);
 
     cameraposevisual.setScale(1);
     cameraposevisual.setLineWidth(0.05);

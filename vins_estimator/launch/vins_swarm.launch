@@ -1,0 +1,8 @@
+<launch>
+<param name="config_file" type="string" value="$(find feature_tracker)/../config/euroc/euroc_config.yaml" />
+<param name="vins_folder" type="string" value="$(find feature_tracker)/../config/../" />
+<param name="agent_num" type="int" value="1" />
+
+<node name="feature_tracker" pkg="feature_tracker" type="feature_tracker" output="log"/>
+<node name="vins_estimator" pkg="vins_estimator" type="vins_estimator" output="screen"/>
+</launch>
