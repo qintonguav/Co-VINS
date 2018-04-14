@@ -5,6 +5,7 @@ geometry_msgs/Quaternion orientation_imu
 geometry_msgs/Point tic
 geometry_msgs/Quaternion ric
 geometry_msgs/Point32[] point_3d
+geometry_msgs/Point32[] point_uv
 int64[] point_des
 geometry_msgs/Point32[] feature_2d
 int64[] feature_des

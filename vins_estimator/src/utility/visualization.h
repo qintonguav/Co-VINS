@@ -67,4 +67,6 @@ void pubKeyframe(const Estimator &estimator);
 
 void pubRelocalization(const Estimator &estimator);
 
-void pubAgentFrame(const Estimator &estimator, const cv::Mat &image, camodocal::CameraPtr m_camera);
+void preprocessAgentFrame(const Estimator &estimator, agent_msg::AgentMsg &agent_frame_msg);
+
+void pubAgentFrame(agent_msg::AgentMsg &agent_frame_msg, const cv::Mat &image, camodocal::CameraPtr m_camera);

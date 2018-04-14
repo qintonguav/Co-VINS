@@ -424,153 +424,153 @@ void pubRelocalization(const Estimator &estimator)
     pub_relo_relative_pose.publish(odometry);
 }
 
-
-void pubAgentFrame(const Estimator &estimator, const cv::Mat &image, camodocal::CameraPtr m_camera)
+void preprocessAgentFrame(const Estimator &estimator, agent_msg::AgentMsg &agent_frame_msg)
 {
-    if (estimator.solver_flag == Estimator::SolverFlag::NON_LINEAR && estimator.marginalization_flag == 0)
+    agent_frame_msg.header = estimator.Headers[WINDOW_SIZE - 2];
+    agent_frame_msg.seq = AGENT_NUM;
+
+    int i = WINDOW_SIZE - 2;
+    Vector3d P = estimator.Ps[i];
+    Quaterniond R = Quaterniond(estimator.Rs[i]);
+    agent_frame_msg.position_imu.x = P.x();
+    agent_frame_msg.position_imu.y = P.y();
+    agent_frame_msg.position_imu.z = P.z();
+    agent_frame_msg.orientation_imu.x = R.x();
+    agent_frame_msg.orientation_imu.y = R.y();
+    agent_frame_msg.orientation_imu.z = R.z();
+    agent_frame_msg.orientation_imu.w = R.w();
+
+    agent_frame_msg.tic.x = estimator.tic[0].x();
+    agent_frame_msg.tic.y = estimator.tic[0].y();
+    agent_frame_msg.tic.z = estimator.tic[0].z();
+    Quaterniond tmpQ(estimator.ric[0]);
+    agent_frame_msg.ric.x = tmpQ.x();
+    agent_frame_msg.ric.y = tmpQ.y();
+    agent_frame_msg.ric.z = tmpQ.z();
+    agent_frame_msg.ric.w = tmpQ.w();
+
+    vector<Eigen::Vector3d> window_points_3d;
+    //vector<Eigen::Vector2d> window_points_2d;
+    vector<Eigen::Vector2d> window_points_uv;
+    for (auto &it_per_id : estimator.f_manager.feature)
     {
-        agent_msg::AgentMsg agent_frame_msg;
-        agent_frame_msg.header= estimator.Headers[WINDOW_SIZE - 2];
-        agent_frame_msg.seq = AGENT_NUM;
-
-        int i = WINDOW_SIZE - 2;
-        Vector3d P = estimator.Ps[i];
-        Quaterniond R = Quaterniond(estimator.Rs[i]);
-        agent_frame_msg.position_imu.x = P.x();
-        agent_frame_msg.position_imu.y = P.y();
-        agent_frame_msg.position_imu.z = P.z();
-        agent_frame_msg.orientation_imu.x = R.x();
-        agent_frame_msg.orientation_imu.y = R.y();
-        agent_frame_msg.orientation_imu.z = R.z();
-        agent_frame_msg.orientation_imu.w = R.w();
-
-        agent_frame_msg.tic.x = estimator.tic[0].x();
-        agent_frame_msg.tic.y = estimator.tic[0].y();
-        agent_frame_msg.tic.z = estimator.tic[0].z();
-        Quaterniond tmpQ(estimator.ric[0]);
-        agent_frame_msg.ric.x = tmpQ.x();
-        agent_frame_msg.ric.y = tmpQ.y();
-        agent_frame_msg.ric.z = tmpQ.z();
-        agent_frame_msg.ric.w = tmpQ.w();
-
-        vector<Eigen::Vector3d> window_points_3d;
-        //vector<Eigen::Vector2d> window_points_2d;
-        vector<Eigen::Vector2d> window_points_uv;
-        for (auto &it_per_id : estimator.f_manager.feature)
+        int frame_size = it_per_id.feature_per_frame.size();
+        if(it_per_id.start_frame < WINDOW_SIZE - 2 && it_per_id.start_frame + frame_size - 1 >= WINDOW_SIZE - 2 && it_per_id.solve_flag == 1)
         {
-            int frame_size = it_per_id.feature_per_frame.size();
-            if(it_per_id.start_frame < WINDOW_SIZE - 2 && it_per_id.start_frame + frame_size - 1 >= WINDOW_SIZE - 2 && it_per_id.solve_flag == 1)
-            {
 
-                int imu_i = it_per_id.start_frame;
-                Vector3d pts_i = it_per_id.feature_per_frame[0].point * it_per_id.estimated_depth;
-                Vector3d w_pts_i = estimator.Rs[imu_i] * (estimator.ric[0] * pts_i + estimator.tic[0])
-                                      + estimator.Ps[imu_i];
-                window_points_3d.push_back(w_pts_i);
-                int imu_j = WINDOW_SIZE - 2 - it_per_id.start_frame;
-                //window_points_2d.push_back(it_per_id.feature_per_frame[imu_j].point.head(2));
-                window_points_uv.push_back(it_per_id.feature_per_frame[imu_j].uv);
-            }
-        }        
-
-        BriefExtractor extractor(BRIEF_PATTERN_FILE.c_str());
-        const int fast_th = 20; // corner detector response threshold
-        vector<cv::KeyPoint> keypoints_uv, window_keypoints_uv;
-        vector<cv::KeyPoint> keypoints_2d;
-        if(0)
-            cv::FAST(image, keypoints_uv, fast_th, true);
-        else
-        {
-            vector<cv::Point2f> tmp_pts;
-            cv::goodFeaturesToTrack(image, tmp_pts, 1000, 0.01, 5);
-            for(int i = 0; i < (int)tmp_pts.size(); i++)
-            {
-                cv::KeyPoint key;
-                key.pt = tmp_pts[i];
-                keypoints_uv.push_back(key);
-            }
+            int imu_i = it_per_id.start_frame;
+            Vector3d pts_i = it_per_id.feature_per_frame[0].point * it_per_id.estimated_depth;
+            Vector3d w_pts_i = estimator.Rs[imu_i] * (estimator.ric[0] * pts_i + estimator.tic[0])
+                                  + estimator.Ps[imu_i];
+            window_points_3d.push_back(w_pts_i);
+            int imu_j = WINDOW_SIZE - 2 - it_per_id.start_frame;
+            //window_points_2d.push_back(it_per_id.feature_per_frame[imu_j].point.head(2));
+            window_points_uv.push_back(it_per_id.feature_per_frame[imu_j].uv);
         }
-        vector<BRIEF::bitset> brief_descriptors, window_brief_descriptors;
-        extractor(image, keypoints_uv, brief_descriptors);
-        cout << "key point size" << keypoints_uv.size() << endl;
+    }        
 
-        
-        for (int i = 0; i < (int)keypoints_uv.size(); i++)
-        {
-            Eigen::Vector3d tmp_p;
-            m_camera->liftProjective(Eigen::Vector2d(keypoints_uv[i].pt.x, keypoints_uv[i].pt.y), tmp_p);
-            cv::KeyPoint tmp_norm;
-            tmp_norm.pt = cv::Point2f(tmp_p.x()/tmp_p.z(), tmp_p.y()/tmp_p.z());
-            keypoints_2d.push_back(tmp_norm);
-        }
-        
+    for(int i = 0 ; i < (int)window_points_3d.size(); i++)
+    {
+        geometry_msgs::Point32 p;
+        p.x = window_points_3d[i](0);
+        p.y = window_points_3d[i](1);
+        p.z = window_points_3d[i](2);
+        agent_frame_msg.point_3d.push_back(p);
+    }
+    
+    for(int i = 0 ; i < (int)window_points_uv.size(); i++)
+    {
+        geometry_msgs::Point32 p;
+        p.x = window_points_uv[i](0);
+        p.y = window_points_uv[i](1);
+        p.z = 1;
+        agent_frame_msg.point_uv.push_back(p);
+    }
 
-        for(int i = 0; i < (int)window_points_uv.size(); i++)
+}
+
+
+void pubAgentFrame(agent_msg::AgentMsg &agent_frame_msg, const cv::Mat &image, camodocal::CameraPtr m_camera)
+{
+
+    BriefExtractor extractor(BRIEF_PATTERN_FILE.c_str());
+    const int fast_th = 20; // corner detector response threshold
+    vector<cv::KeyPoint> keypoints_uv, window_keypoints_uv;
+    vector<cv::KeyPoint> keypoints_2d;
+    if(0)
+        cv::FAST(image, keypoints_uv, fast_th, true);
+    else
+    {
+        vector<cv::Point2f> tmp_pts;
+        cv::goodFeaturesToTrack(image, tmp_pts, 1000, 0.01, 5);
+        for(int i = 0; i < (int)tmp_pts.size(); i++)
         {
             cv::KeyPoint key;
-            key.pt = cv::Point2f(window_points_uv[i].x(),window_points_uv[i].y());
-            window_keypoints_uv.push_back(key);
+            key.pt = tmp_pts[i];
+            keypoints_uv.push_back(key);
         }
-        extractor(image, window_keypoints_uv, window_brief_descriptors);
-
-        
-        for(int i = 0 ; i < (int)window_points_3d.size(); i++)
-        {
-            geometry_msgs::Point32 p;
-            p.x = window_points_3d[i](0);
-            p.y = window_points_3d[i](1);
-            p.z = window_points_3d[i](2);
-            agent_frame_msg.point_3d.push_back(p);
-        }
-        /*
-        for(int i = 0 ; i < (int)window_points_2d.size(); i++)
-        {
-            geometry_msgs::Point32 p;
-            p.x = window_points_2d[i](0);
-            p.y = window_points_2d[i](1);
-            p.z = 1;
-            agent_frame_msg.point_2d.push_back(p);
-        }
-        */
-        for(int i = 0 ; i < (int)keypoints_2d.size(); i++)
-        {
-            geometry_msgs::Point32 p;
-            p.x = keypoints_2d[i].pt.x;
-            p.y = keypoints_2d[i].pt.y;
-            p.z = 1;
-            agent_frame_msg.feature_2d.push_back(p);
-        }
-
-        for (int i = 0; i < (int)window_brief_descriptors.size();i++)
-        {
-            for (int k = 0; k < 4; k++)
-            {
-                unsigned long long int tmp_int = 0;
-                for (int j = 255 - 64 * k; j > 255 - 64 * k - 64; j--)
-                {
-                    tmp_int <<= 1;
-                    tmp_int += window_brief_descriptors[i][j];
-                }
-                agent_frame_msg.point_des.push_back(tmp_int);
-            }
-        }
-        
-        for (int i = 0; i < (int)brief_descriptors.size();i++)
-        {
-            //cout << i << "  "<< brief_descriptors[i] << endl;
-            for (int k = 0; k < 4; k++)
-            {
-                unsigned long long int tmp_int = 0;
-                for (int j = 255 - 64 * k; j > 255 - 64 * k - 64; j--)
-                {
-                    tmp_int <<= 1;
-                    tmp_int += brief_descriptors[i][j];
-                }
-                agent_frame_msg.feature_des.push_back(tmp_int);
-            }
-        }
-        pub_agent_frame.publish(agent_frame_msg);
     }
+    vector<BRIEF::bitset> brief_descriptors, window_brief_descriptors;
+    extractor(image, keypoints_uv, brief_descriptors);
+    cout << "key point size" << keypoints_uv.size() << endl;
+
+    for (int i = 0; i < (int)keypoints_uv.size(); i++)
+    {
+        Eigen::Vector3d tmp_p;
+        m_camera->liftProjective(Eigen::Vector2d(keypoints_uv[i].pt.x, keypoints_uv[i].pt.y), tmp_p);
+        cv::KeyPoint tmp_norm;
+        tmp_norm.pt = cv::Point2f(tmp_p.x()/tmp_p.z(), tmp_p.y()/tmp_p.z());
+        keypoints_2d.push_back(tmp_norm);
+    }
+    
+
+    for(int i = 0; i < (int)agent_frame_msg.point_uv.size(); i++)
+    {
+        cv::KeyPoint key;
+        key.pt = cv::Point2f(agent_frame_msg.point_uv[i].x,agent_frame_msg.point_uv[i].y);
+        window_keypoints_uv.push_back(key);
+    }
+    extractor(image, window_keypoints_uv, window_brief_descriptors);
+
+    
+    for(int i = 0 ; i < (int)keypoints_2d.size(); i++)
+    {
+        geometry_msgs::Point32 p;
+        p.x = keypoints_2d[i].pt.x;
+        p.y = keypoints_2d[i].pt.y;
+        p.z = 1;
+        agent_frame_msg.feature_2d.push_back(p);
+    }
+
+    for (int i = 0; i < (int)window_brief_descriptors.size();i++)
+    {
+        for (int k = 0; k < 4; k++)
+        {
+            unsigned long long int tmp_int = 0;
+            for (int j = 255 - 64 * k; j > 255 - 64 * k - 64; j--)
+            {
+                tmp_int <<= 1;
+                tmp_int += window_brief_descriptors[i][j];
+            }
+            agent_frame_msg.point_des.push_back(tmp_int);
+        }
+    }
+    
+    for (int i = 0; i < (int)brief_descriptors.size();i++)
+    {
+        //cout << i << "  "<< brief_descriptors[i] << endl;
+        for (int k = 0; k < 4; k++)
+        {
+            unsigned long long int tmp_int = 0;
+            for (int j = 255 - 64 * k; j > 255 - 64 * k - 64; j--)
+            {
+                tmp_int <<= 1;
+                tmp_int += brief_descriptors[i][j];
+            }
+            agent_frame_msg.feature_des.push_back(tmp_int);
+        }
+    }
+    pub_agent_frame.publish(agent_frame_msg);
 }
 
 BriefExtractor::BriefExtractor(const std::string &pattern_file)

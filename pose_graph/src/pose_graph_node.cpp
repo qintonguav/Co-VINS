@@ -212,7 +212,7 @@ int main(int argc, char **argv)
     }
     */
 
-    ros::Subscriber sub_agent_msg = n.subscribe("/vins_estimator/agent_frame",2000, agent_callback);
+    ros::Subscriber sub_agent_msg = n.subscribe("/agent_frame",2000, agent_callback);
 
     std::thread agent_frame_thread;
     agent_frame_thread = std::thread(agent_process);
