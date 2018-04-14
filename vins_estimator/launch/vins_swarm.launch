@@ -1,5 +1,5 @@
 <launch>
-<param name="config_file" type="string" value="$(find feature_tracker)/../config/euroc/euroc_config.yaml" />
+<param name="config_file" type="string" value="$(find feature_tracker)/../config/A3/A3_config.yaml" />
 <param name="vins_folder" type="string" value="$(find feature_tracker)/../config/../" />
 <param name="agent_num" type="int" value="1" />
 

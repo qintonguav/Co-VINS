@@ -1,28 +1,30 @@
 %YAML:1.0
 
 #common parameters
-imu_topic: "imu0"
-image_topic: "cam0/image_raw"
-output_path: "/home/tony-ws1/output/"
+imu_topic: "/dji_sdk_1/dji_sdk/imu"
+image_topic: "/hcfox_1/image"
+output_path: "/home/nvidia/output/"
 
 #camera calibration 
-model_type: PINHOLE
+model_type: MEI
 camera_name: camera
 image_width: 752
 image_height: 480
+mirror_parameters:
+   xi: 2.0353060359462911e+00
 distortion_parameters:
-   k1: -2.917e-01
-   k2: 8.228e-02
-   p1: 5.333e-05
-   p2: -1.578e-04
+   k1: -7.2892239634932493e-02
+   k2: 6.4587802859659704e-01
+   p1: -1.2926890153963503e-03
+   p2: 2.3976223302643426e-03
 projection_parameters:
-   fx: 4.616e+02
-   fy: 4.603e+02
-   cx: 3.630e+02
-   cy: 2.481e+02
+   gamma1: 6.5702334612698883e+02
+   gamma2: 6.5701177279946535e+02
+   u0: 3.2811066885793593e+02
+   v0: 2.3576095722736588e+02
 
 # Extrinsic parameter between IMU and Camera.
-estimate_extrinsic: 0   # 0  Have an accurate extrinsic parameters. We will trust the following imu^R_cam, imu^T_cam, don't change it.
+estimate_extrinsic: 1   # 0  Have an accurate extrinsic parameters. We will trust the following imu^R_cam, imu^T_cam, don't change it.
                         # 1  Have an initial guess about extrinsic parameters. We will optimize around your initial guess.
                         # 2  Don't know anything about extrinsic parameters. You don't need to give R,T. We will try to calibrate it. Do some rotation movement at beginning.                        
 #If you choose 0 or 1, you should write down the following matrix.
@@ -31,16 +33,17 @@ extrinsicRotation: !!opencv-matrix
    rows: 3
    cols: 3
    dt: d
-   data: [0.0148655429818, -0.999880929698, 0.00414029679422,
-           0.999557249008, 0.0149672133247, 0.025715529948, 
-           -0.0257744366974, 0.00375618835797, 0.999660727178]
-#Translation from camera frame to imu frame, imu^T_cam
+   data: [ -3.7827284655860938e-02, -1.0581997676700591e-02,
+       9.9922826113993346e-01, 9.9895276939056521e-01,
+       2.5354867014068416e-02, 3.8085367867716713e-02,
+       -2.5738318952194483e-02, 9.9962250477061065e-01,
+       9.6118101128717104e-03 ]
 extrinsicTranslation: !!opencv-matrix
    rows: 3
    cols: 1
    dt: d
-   data: [-0.0216401454975,-0.064676986768, 0.00981073058949]
-
+   data: [ 9.9020790585859414e-02, -1.2774127570482940e-02,
+       -5.7923898486565723e-03 ]
 #feature traker paprameters
 max_cnt: 120            # max feature number in feature tracking
 min_dist: 30            # min distance between two features 
@@ -48,7 +51,7 @@ freq: 10                # frequence (Hz) of publish tracking result. At least 10
 F_threshold: 1.0        # ransac threshold (pixel)
 show_track: 1           # publish tracking image as topic
 equalize: 0             # if image is too dark or light, trun on equalize to find enough features
-fisheye: 0              # if using fisheye, trun on it. A circle mask will be loaded to remove edge noisy points
+fisheye: 1              # if using fisheye, trun on it. A circle mask will be loaded to remove edge noisy points
 
 #optimization parameters
 max_solver_time: 0.04  # max solver itration time (ms), to guarantee real time
@@ -56,11 +59,11 @@ max_num_iterations: 8   # max solver itrations, to guarantee real time
 keyframe_parallax: 10.0 # keyframe selection threshold (pixel)
 
 #imu parameters       The more accurate parameters you provide, the better performance
-acc_n: 0.08          # accelerometer measurement noise standard deviation. #0.2   0.04
-gyr_n: 0.004         # gyroscope measurement noise standard deviation.     #0.05  0.004
-acc_w: 0.00004         # accelerometer bias random work noise standard deviation.  #0.02
-gyr_w: 2.0e-6       # gyroscope bias random work noise standard deviation.     #4.0e-5
-g_norm: 9.81007     # gravity magnitude
+acc_n: 0.2          # accelerometer measurement noise standard deviation. #0.2   0.04
+gyr_n: 0.04         # gyroscope measurement noise standard deviation.     #0.05  0.004
+acc_w: 0.0004         # accelerometer bias random work noise standard deviation.  #0.02
+gyr_w: 2.0e-5       # gyroscope bias random work noise standard deviation.     #4.0e-5
+g_norm: 9.805     # gravity magnitude
 
 #loop closure parameters
 loop_closure: 0                    # start loop closure
