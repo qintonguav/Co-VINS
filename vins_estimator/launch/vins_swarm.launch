@@ -1,6 +1,6 @@
 <launch>
 <arg name="drone_number" default="1"/>
-<group ns="$(arg drone_number)">
+<group ns="vins_$(arg drone_number)">
 <param name="config_file" type="string" value="$(find feature_tracker)/../config/A3/A3_config_local.yaml" />
 <param name="vins_folder" type="string" value="$(find feature_tracker)/../config/../" />
 <param name="agent_num" type="int" value="$(arg drone_number)" />
