@@ -909,7 +909,7 @@ void PoseGraph::publishTF()
             q.setY(TF_q.y());
             q.setZ(TF_q.z());
             transform.setRotation(q);
-            br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "/world", "/drone_" + to_string(sequence)));
+            br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "/global", "/drone_" + to_string(sequence)));
             //printf("%d tf t %f %f %f \n", sequence, TF_t.x(), TF_t.y(),TF_t.z());
             //printf("%d tf q %f %f %f %f \n", sequence, TF_q.w(),TF_q.x(), TF_q.y(), TF_q.z());
         }
