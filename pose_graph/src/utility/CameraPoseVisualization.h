@@ -25,7 +25,7 @@ public:
 
 	void publish_by(ros::Publisher& pub, const std_msgs::Header& header);
 	void add_edge(const Eigen::Vector3d& p0, const Eigen::Vector3d& p1);
-	void add_loopedge(const Eigen::Vector3d& p0, const Eigen::Vector3d& p1);
+	void add_loopedge(const Eigen::Vector3d& p0, const Eigen::Vector3d& p1, int color_mode);
 	//void add_image(const Eigen::Vector3d& T, const Eigen::Matrix3d& R, const cv::Mat &src);
 	void publish_image_by( ros::Publisher &pub, const std_msgs::Header &header);
 private:

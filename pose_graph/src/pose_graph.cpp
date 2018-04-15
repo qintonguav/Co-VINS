@@ -235,7 +235,10 @@ void PoseGraph::addAgentFrame(KeyFrame* cur_kf)
             connected_KF->getPose(connected_P, connected_R);
             //cur_kf->getVioPose(P0, R0);
             cur_kf->getPose(P0, R0);
-            posegraph_visualization->add_loopedge(P0, connected_P + Vector3d(VISUALIZATION_SHIFT_X, VISUALIZATION_SHIFT_Y, 0));
+            if (cur_kf->sequence == connected_KF->sequence)
+                posegraph_visualization->add_loopedge(P0, connected_P + Vector3d(VISUALIZATION_SHIFT_X, VISUALIZATION_SHIFT_Y, 0), 0);
+            else
+                posegraph_visualization->add_loopedge(P0, connected_P + Vector3d(VISUALIZATION_SHIFT_X, VISUALIZATION_SHIFT_Y, 0), 1);
 
             
         }
@@ -307,7 +310,10 @@ void PoseGraph::loadKeyFrame(KeyFrame* cur_kf)
             connected_KF->getPose(connected_P, connected_R);
             //cur_kf->getVioPose(P0, R0);
             cur_kf->getPose(P0, R0);
-            posegraph_visualization->add_loopedge(P0, connected_P + Vector3d(VISUALIZATION_SHIFT_X, VISUALIZATION_SHIFT_Y, 0));
+            if (cur_kf->sequence == connected_KF->sequence)
+                posegraph_visualization->add_loopedge(P0, connected_P + Vector3d(VISUALIZATION_SHIFT_X, VISUALIZATION_SHIFT_Y, 0), 0);
+            else
+                posegraph_visualization->add_loopedge(P0, connected_P + Vector3d(VISUALIZATION_SHIFT_X, VISUALIZATION_SHIFT_Y, 0), 1);
             
         }
     }
@@ -683,7 +689,10 @@ void PoseGraph::updatePath()
                 connected_KF->getPose(connected_P, connected_R);
                 //(*it)->getVioPose(P, R);
                 (it)->getPose(P, R);
-                posegraph_visualization->add_loopedge(P, connected_P + Vector3d(VISUALIZATION_SHIFT_X, VISUALIZATION_SHIFT_Y, 0));
+                if (it->sequence == connected_KF->sequence)
+                    posegraph_visualization->add_loopedge(P, connected_P + Vector3d(VISUALIZATION_SHIFT_X, VISUALIZATION_SHIFT_Y, 0), 0);
+                else
+                    posegraph_visualization->add_loopedge(P, connected_P + Vector3d(VISUALIZATION_SHIFT_X, VISUALIZATION_SHIFT_Y, 0), 1);
             }
         }
 

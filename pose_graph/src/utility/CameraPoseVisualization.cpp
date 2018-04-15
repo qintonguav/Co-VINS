@@ -72,7 +72,7 @@ void CameraPoseVisualization::add_edge(const Eigen::Vector3d& p0, const Eigen::V
     m_markers.push_back(marker);
 }
 
-void CameraPoseVisualization::add_loopedge(const Eigen::Vector3d& p0, const Eigen::Vector3d& p1){
+void CameraPoseVisualization::add_loopedge(const Eigen::Vector3d& p0, const Eigen::Vector3d& p1, int color_mode){
     //m_markers.clear();
     visualization_msgs::Marker marker;
 
@@ -85,11 +85,23 @@ void CameraPoseVisualization::add_loopedge(const Eigen::Vector3d& p0, const Eige
     marker.action = visualization_msgs::Marker::ADD;
     marker.lifetime = ros::Duration();
     //marker.scale.x = 0.4;
-    marker.scale.x = 0.02;
-    marker.color.r = 1.0f;
-    //marker.color.g = 1.0f;
-    //marker.color.b = 1.0f;
-    marker.color.a = 1.0;
+    if(color_mode == 0)
+    {
+      marker.scale.x = 0.02;
+      //marker.color.r = 1.0f;
+      //marker.color.g = 1.0f;
+      marker.color.r = 1.0f;
+      marker.color.g = 1.0f;
+      marker.color.a = 1.0;
+    }
+    else
+    {
+      marker.scale.x = 0.02;
+      marker.color.r = 1.0f;
+      //marker.color.g = 1.0f;
+      //marker.color.b = 1.0f;
+      marker.color.a = 1.0;
+    }
 
     geometry_msgs::Point point0, point1;
 

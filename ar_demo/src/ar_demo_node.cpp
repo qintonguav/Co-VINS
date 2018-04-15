@@ -374,7 +374,7 @@ void callback(const ImageConstPtr& img_msg, const nav_msgs::Odometry::ConstPtr p
    
     tf::StampedTransform transform;
     try{
-        listener->lookupTransform("/world", "/drone_" + to_string(agent_serial),
+        listener->lookupTransform("/global", "/drone_" + to_string(agent_serial),
                                 ros::Time(0), transform);
     }
     catch (tf::TransformException &ex) {
