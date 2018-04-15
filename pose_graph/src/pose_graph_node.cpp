@@ -40,9 +40,12 @@ std::mutex m_agent_msg_buf;
 
 void agent_callback(const agent_msg::AgentMsgConstPtr &agent_msg)
 {
-    m_agent_msg_buf.lock();
-    agent_msg_buf.push(agent_msg);
-    m_agent_msg_buf.unlock();
+    if(start_flag);
+    {
+        m_agent_msg_buf.lock();
+        agent_msg_buf.push(agent_msg);
+        m_agent_msg_buf.unlock();
+    }
 }
 
 void agent_process()
@@ -134,7 +137,6 @@ void agent_process()
             KeyFrame* keyframe = new KeyFrame(sequence, T, R, tic, ric, point_3d, feature_2d, 
                                              point_descriptors, feature_descriptors);             
             m_process.lock();
-            start_flag = 1;
             posegraph.addAgentFrame(keyframe);
             t_agent += t_addframe.toc();
             frame_cnt++;
@@ -169,6 +171,12 @@ void command()
             m_process.unlock();
             printf("load pose graph finish\n");
         }
+        if(c  == 'b')
+        {
+            printf("begin receive agent msg\n");
+            start_flag = 1;
+        }
+
         std::chrono::milliseconds dura(5);
         std::this_thread::sleep_for(dura);
     }
