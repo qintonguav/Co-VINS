@@ -1,10 +1,9 @@
 <launch>    
-    <arg name="config_path" default = "$(find feature_tracker)/../config/euroc/euroc_config.yaml" />
     <node name="pose_graph" pkg="pose_graph" type="pose_graph" output="screen">
         <param name="visualization_shift_x" type="int" value="0" />
         <param name="visualization_shift_y" type="int" value="0" />
         <param name="skip_cnt" type="int" value="0" />
         <param name="skip_dis" type="double" value="0" />
-        <param name="pose_graph_save_path" type="string" value="/home/tony-ws1/raw_data/pose_graph/" />
+        <param name="pose_graph_save_path" type="string" value="/home/ri/raw_data/pose_graph/" />
     </node>
 </launch>
