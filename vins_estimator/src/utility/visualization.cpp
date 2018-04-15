@@ -103,7 +103,7 @@ void printStatistics(const Estimator &estimator, double t)
     last_path = estimator.Ps[WINDOW_SIZE];
     ROS_DEBUG("sum of path %f", sum_of_path);
     if (ESTIMATE_TD)
-        ROS_INFO("td %f", estimator.td);
+        ROS_DEBUG("td %f", estimator.td);
 }
 
 void pubOdometry(const Estimator &estimator, const std_msgs::Header &header)
@@ -512,7 +512,7 @@ void pubAgentFrame(agent_msg::AgentMsg &agent_frame_msg, const cv::Mat &image, c
     }
     vector<BRIEF::bitset> brief_descriptors, window_brief_descriptors;
     extractor(image, keypoints_uv, brief_descriptors);
-    cout << "key point size" << keypoints_uv.size() << endl;
+    //cout << "key point size" << keypoints_uv.size() << endl;
 
     for (int i = 0; i < (int)keypoints_uv.size(); i++)
     {

@@ -359,7 +359,7 @@ void process()
                         m_agent_msg_buf.lock();
                         agent_msg_buf.push(agent_frame_msg);
                         m_agent_msg_buf.unlock();
-                        ROS_WARN("preprocess agent frame time %f", pubAgentFrame_time.toc());
+                        //ROS_WARN("preprocess agent frame time %f", pubAgentFrame_time.toc());
                         last_agent_t = tmp_agent_t;
                     }
                 }
@@ -430,7 +430,7 @@ void agent_process()
                 cv::Mat img = ptr->image;
                 pubAgentFrame(tmp_msg, img, m_camera);
             }
-            ROS_WARN("pub agent frame time %f", pubAgentFrame_time.toc());
+            //ROS_WARN("pub agent frame time %f", pubAgentFrame_time.toc());
 
         }
         std::chrono::milliseconds dura(5);
