@@ -15,6 +15,7 @@ find_package(catkin REQUIRED COMPONENTS
     roslib
     agent_msg
     tf
+    visualization_msgs
     )
 
 find_package(OpenCV)

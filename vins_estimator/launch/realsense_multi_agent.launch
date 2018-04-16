@@ -1,6 +1,5 @@
 <launch>
- 
-    <group ns="agent1">
+    <group ns="vins_1">
     <include file="$(find vins_estimator)/launch/agent.launch">
         <arg name="config_path" default = "$(find feature_tracker)/../config/realsense/realsense_fisheye_config.yaml" />
         <arg name="vins_path" default = "$(find feature_tracker)/../config/../" />
@@ -9,7 +8,7 @@
     <node pkg="rosbag" type="play" name="player" output="log" args="/home/tony-ws1/bag/swarm_bag/swarm_ar/1.bag  /camera/fisheye/image_raw:=camera/fisheye/image_raw /camera/imu/data_raw/:=camera/imu/data_raw" />
     </group>
 
-    <group ns="agent2">
+    <group ns="vins_2">
     <include file="$(find vins_estimator)/launch/agent.launch">
         <arg name="config_path" default = "$(find feature_tracker)/../config/realsense/realsense_fisheye_config.yaml" />
         <arg name="vins_path" default = "$(find feature_tracker)/../config/../" />
@@ -18,7 +17,7 @@
     <node pkg="rosbag" type="play" name="player" output="log" args="/home/tony-ws1/bag/swarm_bag/swarm_ar/2.bag  /camera/fisheye/image_raw:=camera/fisheye/image_raw /camera/imu/data_raw/:=camera/imu/data_raw" />
     </group>
     
-    <group ns="agent3">
+    <group ns="vins_3">
     <include file="$(find vins_estimator)/launch/agent.launch">
         <arg name="config_path" default = "$(find feature_tracker)/../config/realsense/realsense_fisheye_config.yaml" />
         <arg name="vins_path" default = "$(find feature_tracker)/../config/../" />

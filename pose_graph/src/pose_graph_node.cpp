@@ -14,6 +14,8 @@
 #include "parameters.h"
 #include <agent_msg/AgentMsg.h>
 #include "ThirdParty/DVision/DVision.h"
+#include "visualization_msgs/Marker.h"
+#include <tf/transform_listener.h>
 
 using namespace std;
 
@@ -36,6 +38,11 @@ std::string VINS_RESULT_PATH;
 
 queue<agent_msg::AgentMsgConstPtr> agent_msg_buf;
 std::mutex m_agent_msg_buf;
+
+ros::Publisher meshPub;
+std::string mesh_resource;
+visualization_msgs::Marker meshROS;
+tf::TransformListener* listener;
 
 
 void agent_callback(const agent_msg::AgentMsgConstPtr &agent_msg)
@@ -182,6 +189,89 @@ void command()
     }
 }
 
+void odom_callback(const nav_msgs::Odometry::ConstPtr& msg)
+{
+    // Mesh model           
+    //ROS_INFO("odometry callback");       
+    int sequence = std::stoi(msg->child_frame_id);
+    Quaterniond q(msg->pose.pose.orientation.w,
+                    msg->pose.pose.orientation.x,
+                    msg->pose.pose.orientation.y,
+                    msg->pose.pose.orientation.z);
+    Vector3d t(msg->pose.pose.position.x, msg->pose.pose.position.y, msg->pose.pose.position.z);
+
+    tf::StampedTransform transform;
+    try{
+        listener->lookupTransform("/global", "/drone_" + to_string(sequence),
+                                ros::Time(0), transform);
+    }
+    catch (tf::TransformException &ex) {
+        //ROS_WARN("no %d transform yet", sequence);
+        return;
+    }
+    //ROS_WARN("read transform success!");
+
+    tf::Vector3 tf_t = transform.getOrigin();
+    tf::Quaternion tf_q = transform.getRotation();
+
+    Vector3d w_T_local = Vector3d(tf_t.x(), tf_t.y(), tf_t.z());
+    geometry_msgs::Quaternion g_Q;
+    tf::quaternionTFToMsg(tf_q, g_Q);   
+    Quaterniond w_Q_local(g_Q.w, g_Q.x, g_Q.y, g_Q.z);
+
+    q = w_Q_local * q;
+    t = w_Q_local * t + w_T_local;
+
+    Vector3d ypr = Utility::R2ypr(q.toRotationMatrix());
+    ypr(0)    += 90.0*3.14159/180.0;
+    q          = Utility::ypr2R(ypr); 
+        
+    meshROS.header.frame_id = string("/world");
+    meshROS.header.stamp = msg->header.stamp; 
+    meshROS.ns = "mesh";
+    meshROS.id = sequence;
+    meshROS.type = visualization_msgs::Marker::MESH_RESOURCE;
+    meshROS.action = visualization_msgs::Marker::ADD;
+    meshROS.pose.position.x = t.x();
+    meshROS.pose.position.y = t.y();
+    meshROS.pose.position.z = t.z();
+    meshROS.pose.orientation.w = 1;
+    meshROS.pose.orientation.x = 0;
+    meshROS.pose.orientation.y = 0;
+    meshROS.pose.orientation.z = 0;
+    meshROS.scale.x = 5;
+    meshROS.scale.y = 5;
+    meshROS.scale.z = 5;
+
+    meshROS.color.a = 1.0;
+    if (sequence == 1)
+    {
+        meshROS.color.r = 0.0;
+        meshROS.color.g = 1.0;
+        meshROS.color.b = 0.0;
+    }
+    else if(sequence == 2)
+    {
+        meshROS.color.r = 1.0;
+        meshROS.color.g = 1.0;
+        meshROS.color.b = 0.0;
+    }
+    else if(sequence == 3)
+    {
+        meshROS.color.r = 0.0;
+        meshROS.color.g = 0.0;
+        meshROS.color.b = 1.0;
+    }
+    else if(sequence == 4)
+    {
+        meshROS.color.r = 1.0;
+        meshROS.color.g = 0.0;
+        meshROS.color.b = 0.0;
+    }
+
+    meshROS.mesh_resource = mesh_resource;
+    meshPub.publish(meshROS);  
+}
 
 int main(int argc, char **argv)
 {
@@ -194,6 +284,7 @@ int main(int argc, char **argv)
     n.getParam("visualization_shift_y", VISUALIZATION_SHIFT_Y);
     n.getParam("skip_dis", SKIP_DIS);
     n.getParam("pose_graph_save_path", POSE_GRAPH_SAVE_PATH);
+    n.param("mesh_resource", mesh_resource, std::string("package://pose_graph/meshes/hummingbird.mesh"));
 
     std::string pkg_path = ros::package::getPath("pose_graph");
     string vocabulary_file = pkg_path + "/../support_files/brief_k10L6.bin";
@@ -203,32 +294,21 @@ int main(int argc, char **argv)
     BRIEF_PATTERN_FILE = pkg_path + "/../support_files/brief_pattern.yml";
     cout << "BRIEF_PATTERN_FILE" << BRIEF_PATTERN_FILE << endl;
 
-    /*
-    if (0)
-    {
-        printf("load pose graph\n");
-        m_process.lock();
-        posegraph.loadPoseGraph();
-        m_process.unlock();
-        printf("load pose graph finish\n");
-        load_flag = 1;
-    }
-    else
-    {
-        printf("no previous pose graph\n");
-        load_flag = 1;
-    }
-    */
+    ros::Subscriber sub_agent_msg = n.subscribe("/agent_frame", 2000, agent_callback);
+    ros::Subscriber sub_odom1 = n.subscribe("/vins_1/vins_estimator/odometry",  100,  odom_callback);
+    ros::Subscriber sub_odom2 = n.subscribe("/vins_2/vins_estimator/odometry",  100,  odom_callback);
+    ros::Subscriber sub_odom3 = n.subscribe("/vins_3/vins_estimator/odometry",  100,  odom_callback);
+    ros::Subscriber sub_odom4 = n.subscribe("/vins_4/vins_estimator/odometry",  100,  odom_callback);
 
-    ros::Subscriber sub_agent_msg = n.subscribe("/agent_frame",2000, agent_callback);
+    meshPub = n.advertise<visualization_msgs::Marker>("robot", 100, true); 
 
     std::thread agent_frame_thread;
     agent_frame_thread = std::thread(agent_process);
     std::thread keyboard_command_process;
     keyboard_command_process = std::thread(command);
 
-
+    listener = new tf::TransformListener(n);
     ros::spin();
-
+    delete listener;
     return 0;
 }
