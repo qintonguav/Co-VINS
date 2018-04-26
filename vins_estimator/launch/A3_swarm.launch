@@ -1,0 +1,34 @@
+<launch>
+<group ns="vins_1">
+	<param name="config_file" type="string" value="$(find feature_tracker)/../config/A3/A3_config_local.yaml" />
+	<param name="vins_folder" type="string" value="$(find feature_tracker)/../config/../" />
+	<param name="agent_num" type="int" value="1" />
+	<node name="feature_tracker" pkg="feature_tracker" type="feature_tracker" output="log"/>
+	<node name="vins_estimator" pkg="vins_estimator" type="vins_estimator" output="screen"/>
+	<node pkg="rosbag" type="play" name="player" output="log" args="/home/tony-ws1/bag/swarm_bag/swarm/4.bag /dji_sdk_1/dji_sdk/imu:=dji_sdk_1/dji_sdk/imu /hcfox_1/image:=hcfox_1/image" />
+</group>
+<!-- <group ns="vins_2">
+	<param name="config_file" type="string" value="$(find feature_tracker)/../config/A3/A3_config_local.yaml" />
+	<param name="vins_folder" type="string" value="$(find feature_tracker)/../config/../" />
+	<param name="agent_num" type="int" value="2" />
+	<node name="feature_tracker" pkg="feature_tracker" type="feature_tracker" output="log"/>
+	<node name="vins_estimator" pkg="vins_estimator" type="vins_estimator" output="screen"/>
+	<node pkg="rosbag" type="play" name="player" output="log" args="/home/tony-ws1/bag/swarm_bag/swarm/2.bag /dji_sdk_1/dji_sdk/imu:=dji_sdk_1/dji_sdk/imu /hcfox_1/image:=hcfox_1/image" />
+</group>
+<group ns="vins_3">
+	<param name="config_file" type="string" value="$(find feature_tracker)/../config/A3/A3_config_local.yaml" />
+	<param name="vins_folder" type="string" value="$(find feature_tracker)/../config/../" />
+	<param name="agent_num" type="int" value="3" />
+	<node name="feature_tracker" pkg="feature_tracker" type="feature_tracker" output="log"/>
+	<node name="vins_estimator" pkg="vins_estimator" type="vins_estimator" output="screen"/>
+	<node pkg="rosbag" type="play" name="player" output="log" args="/home/tony-ws1/bag/swarm_bag/swarm/3.bag /dji_sdk_1/dji_sdk/imu:=dji_sdk_1/dji_sdk/imu /hcfox_1/image:=hcfox_1/image" />
+</group>
+<group ns="vins_4">
+	<param name="config_file" type="string" value="$(find feature_tracker)/../config/A3/A3_config_local.yaml" />
+	<param name="vins_folder" type="string" value="$(find feature_tracker)/../config/../" />
+	<param name="agent_num" type="int" value="4" />
+	<node name="feature_tracker" pkg="feature_tracker" type="feature_tracker" output="log"/>
+	<node name="vins_estimator" pkg="vins_estimator" type="vins_estimator" output="screen"/>
+	<node pkg="rosbag" type="play" name="player" output="log" args="/home/tony-ws1/bag/swarm_bag/swarm/4.bag /dji_sdk_1/dji_sdk/imu:=dji_sdk_1/dji_sdk/imu /hcfox_1/image:=hcfox_1/image" />
+</group> -->
+</launch>
