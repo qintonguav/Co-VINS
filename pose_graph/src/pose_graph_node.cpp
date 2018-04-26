@@ -239,9 +239,9 @@ void odom_callback(const nav_msgs::Odometry::ConstPtr& msg)
     meshROS.pose.orientation.x = 0;
     meshROS.pose.orientation.y = 0;
     meshROS.pose.orientation.z = 0;
-    meshROS.scale.x = 5;
-    meshROS.scale.y = 5;
-    meshROS.scale.z = 5;
+    meshROS.scale.x = 1;
+    meshROS.scale.y = 1;
+    meshROS.scale.z = 1;
 
     meshROS.color.a = 1.0;
     if (sequence == 1)

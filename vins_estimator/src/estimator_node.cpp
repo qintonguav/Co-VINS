@@ -9,7 +9,6 @@
 #include <opencv2/opencv.hpp>
 #include <ros/package.h>
 #include <agent_msg/AgentMsg.h>
-
 #include "estimator.h"
 #include "parameters.h"
 #include "utility/visualization.h"
@@ -351,7 +350,7 @@ void process()
                 if (estimator.solver_flag == Estimator::SolverFlag::NON_LINEAR && estimator.marginalization_flag == 0)
                 {
                     Vector3d tmp_agent_t = estimator.Ps[WINDOW_SIZE - 2];
-                    if ((tmp_agent_t - last_agent_t).norm() > 0.05)
+                    if ((tmp_agent_t - last_agent_t).norm() > 0.02)
                     {
                         TicToc pubAgentFrame_time;
                         agent_msg::AgentMsg agent_frame_msg;

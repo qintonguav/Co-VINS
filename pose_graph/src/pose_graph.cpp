@@ -226,7 +226,7 @@ void PoseGraph::addAgentFrame(KeyFrame* cur_kf)
     */
     if (SHOW_L_EDGE)
     {
-        if (cur_kf->has_loop)
+        if (cur_kf->has_loop && cur_kf->sequence != 0)
         {
             //printf("has loop \n");
             KeyFrame* connected_KF = getKeyFrame(cur_kf->loop_index);
@@ -302,7 +302,7 @@ void PoseGraph::loadKeyFrame(KeyFrame* cur_kf)
 
     if (SHOW_L_EDGE)
     {
-        if (cur_kf->has_loop)
+        if (cur_kf->has_loop && cur_kf->sequence != 0)
         {
             KeyFrame* connected_KF = getKeyFrame(cur_kf->loop_index);
             Vector3d connected_P,P0;
@@ -339,7 +339,7 @@ int PoseGraph::detectLoop(KeyFrame* keyframe, int frame_index)
     //first query; then add this frame into database!
     QueryResults ret;
     TicToc t_query;
-    db.query(keyframe->feature_des, ret, 4, frame_index - 30);
+    db.query(keyframe->feature_des, ret, 4, frame_index - 10);
     //printf("query time: %f", t_query.toc());
     //cout << "Searching for Image " << frame_index << ". " << ret << endl;
 
@@ -365,7 +365,7 @@ int PoseGraph::detectLoop(KeyFrame* keyframe, int frame_index)
         cv::waitKey(20);
     }
 */
-    if (find_loop && frame_index > 30)
+    if (find_loop && frame_index > 10)
     {
         int min_index = -1;
         for (unsigned int i = 0; i < ret.size(); i++)
@@ -680,7 +680,7 @@ void PoseGraph::updatePath()
         */
         if (SHOW_L_EDGE)
         {
-            if ((it)->has_loop)
+            if ((it)->has_loop && (it)->sequence != 0)
             {
                 
                 KeyFrame* connected_KF = getKeyFrame((it)->loop_index);
