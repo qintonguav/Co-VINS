@@ -27,7 +27,7 @@ public:
 			 cv::Mat &_image, int _loop_index, Eigen::Matrix<double, 8, 1 > &_loop_info,
 			 vector<cv::KeyPoint> &_keypoints, vector<cv::Point2f> &_feature_2d, vector<BRIEF::bitset> &_feature_des);
 	*/
-	KeyFrame(int _seq, Vector3d &_vio_T_w_i, Matrix3d &_vio_R_w_i, Vector3d &_tic, Matrix3d &_ric,
+	KeyFrame(int _seq, double _time_stamp, Vector3d &_vio_T_w_i, Matrix3d &_vio_R_w_i, Vector3d &_tic, Matrix3d &_ric,
 			 vector<cv::Point3f> &_point_3d, vector<cv::Point2f> &_feature_2d, 
 			 vector<BRIEF::bitset> &_point_des, vector<BRIEF::bitset> &_feature_des);
 	bool findConnection(KeyFrame* old_kf);

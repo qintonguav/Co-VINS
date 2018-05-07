@@ -350,7 +350,7 @@ void process()
                 if (estimator.solver_flag == Estimator::SolverFlag::NON_LINEAR && estimator.marginalization_flag == 0)
                 {
                     Vector3d tmp_agent_t = estimator.Ps[WINDOW_SIZE - 2];
-                    if ((tmp_agent_t - last_agent_t).norm() > 0.02)
+                    if ((tmp_agent_t - last_agent_t).norm() > 0.05)
                     {
                         TicToc pubAgentFrame_time;
                         agent_msg::AgentMsg agent_frame_msg;
@@ -384,7 +384,7 @@ void agent_process()
         m_agent_msg_buf.lock();
         agent_msg::AgentMsg tmp_msg;
         bool pub_flag = false;
-        if (!agent_msg_buf.empty())
+        while (!agent_msg_buf.empty())
         {
             tmp_msg = agent_msg_buf.front();
             agent_msg_buf.pop();

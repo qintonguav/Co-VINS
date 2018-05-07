@@ -74,6 +74,7 @@ void agent_process()
         {
             // build keyframe
             TicToc t_addframe;
+            double time_stamp = agent_msg->header.stamp.toSec();
             int sequence = agent_msg->seq;
             Vector3d T = Vector3d(agent_msg->position_imu.x,
                                   agent_msg->position_imu.y,
@@ -141,7 +142,7 @@ void agent_process()
                 //cout << i / 4 << "  "<< tmp_brief << endl;
             } 
 
-            KeyFrame* keyframe = new KeyFrame(sequence, T, R, tic, ric, point_3d, feature_2d, 
+            KeyFrame* keyframe = new KeyFrame(sequence, time_stamp, T, R, tic, ric, point_3d, feature_2d, 
                                              point_descriptors, feature_descriptors);             
             m_process.lock();
             posegraph.addAgentFrame(keyframe);
@@ -204,23 +205,25 @@ void odom_callback(const nav_msgs::Odometry::ConstPtr& msg)
     try{
         listener->lookupTransform("/global", "/drone_" + to_string(sequence),
                                 ros::Time(0), transform);
+
+        tf::Vector3 tf_t = transform.getOrigin();
+        tf::Quaternion tf_q = transform.getRotation();
+
+        Vector3d w_T_local = Vector3d(tf_t.x(), tf_t.y(), tf_t.z());
+        geometry_msgs::Quaternion g_Q;
+        tf::quaternionTFToMsg(tf_q, g_Q);   
+        Quaterniond w_Q_local(g_Q.w, g_Q.x, g_Q.y, g_Q.z);
+
+        q = w_Q_local * q;
+        t = w_Q_local * t + w_T_local;
     }
     catch (tf::TransformException &ex) {
         //ROS_WARN("no %d transform yet", sequence);
-        return;
+        //return;
     }
     //ROS_WARN("read transform success!");
 
-    tf::Vector3 tf_t = transform.getOrigin();
-    tf::Quaternion tf_q = transform.getRotation();
 
-    Vector3d w_T_local = Vector3d(tf_t.x(), tf_t.y(), tf_t.z());
-    geometry_msgs::Quaternion g_Q;
-    tf::quaternionTFToMsg(tf_q, g_Q);   
-    Quaterniond w_Q_local(g_Q.w, g_Q.x, g_Q.y, g_Q.z);
-
-    q = w_Q_local * q;
-    t = w_Q_local * t + w_T_local;
 
     Vector3d ypr = Utility::R2ypr(q.toRotationMatrix());
     ypr(0)    += 90.0*3.14159/180.0;
@@ -253,20 +256,20 @@ void odom_callback(const nav_msgs::Odometry::ConstPtr& msg)
     else if(sequence == 2)
     {
         meshROS.color.r = 1.0;
-        meshROS.color.g = 1.0;
+        meshROS.color.g = 0.5;
         meshROS.color.b = 0.0;
     }
     else if(sequence == 3)
     {
-        meshROS.color.r = 0.0;
+        meshROS.color.r = 1.0;
         meshROS.color.g = 0.0;
-        meshROS.color.b = 1.0;
+        meshROS.color.b = 0.0;
     }
     else if(sequence == 4)
     {
         meshROS.color.r = 1.0;
-        meshROS.color.g = 0.0;
-        meshROS.color.b = 0.0;
+        meshROS.color.g = 1.0;
+        meshROS.color.b = 1.0;
     }
 
     meshROS.mesh_resource = mesh_resource;
@@ -293,6 +296,11 @@ int main(int argc, char **argv)
 
     BRIEF_PATTERN_FILE = pkg_path + "/../support_files/brief_pattern.yml";
     cout << "BRIEF_PATTERN_FILE" << BRIEF_PATTERN_FILE << endl;
+
+    n.getParam("pose_graph_result_path", VINS_RESULT_PATH);
+    std::string pose_graph_path = VINS_RESULT_PATH + "/pose_graph_path.csv";
+    ofstream loop_path_file_tmp(pose_graph_path, ios::out);
+    loop_path_file_tmp.close();
 
     ros::Subscriber sub_agent_msg = n.subscribe("/agent_frame", 2000, agent_callback);
     ros::Subscriber sub_odom1 = n.subscribe("/vins_1/vins_estimator/odometry",  100,  odom_callback);

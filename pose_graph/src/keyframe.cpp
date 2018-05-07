@@ -43,11 +43,12 @@ KeyFrame::KeyFrame(double _time_stamp, int _index, Vector3d &_vio_T_w_i, Matrix3
 */
 
 //create keyframe by agent msg
-KeyFrame::KeyFrame(int _seq, Vector3d &_vio_T_w_i, Matrix3d &_vio_R_w_i, Vector3d &_tic, Matrix3d &_ric,
+KeyFrame::KeyFrame(int _seq, double _time_stamp, Vector3d &_vio_T_w_i, Matrix3d &_vio_R_w_i, Vector3d &_tic, Matrix3d &_ric,
 					vector<cv::Point3f> &_point_3d, vector<cv::Point2f> &_feature_2d, 
 					vector<BRIEF::bitset> &_point_des, vector<BRIEF::bitset> &_feature_des)
 {
 	sequence = _seq;
+	time_stamp = _time_stamp;
 	vio_T_w_i = _vio_T_w_i;
 	vio_R_w_i = _vio_R_w_i;
 	T_w_i = vio_T_w_i;
