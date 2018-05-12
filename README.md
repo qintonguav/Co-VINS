@@ -56,6 +56,8 @@ Use your own computer as both multiple robots and ground station. Run several VI
 roslaunch vins_estimator euroc_multi_agent.launch
 ```
 
+![euroc result](https://github.com/qintonguav/Co-VINS/blob/vins_swarm/support_files/image/euroc_result.png "euroc result")
+
 **3.2 Our data (video)**
 Reproduction of part II in video.
 3.2.1 Download [Our Data](https://www.dropbox.com/sh/o20itggdn3bgiow/AABxHkz4aWPnRAHzTuORXQnCa?dl=0). 
@@ -71,7 +73,7 @@ Reproduction of part II in video.
 roslaunch vins_estimator A3_swarm.launch
 ```
 (If it gose well, you can reproduce the part II in video. )
-
+![swarm result](https://github.com/qintonguav/Co-VINS/blob/vins_swarm/support_files/image/swarm_result.png "swarm result")
 
 ## 4. Acknowledgements
 We use [ceres solver](http://ceres-solver.org/) for non-linear optimization and [DBoW2](https://github.com/dorian3d/DBoW2) for loop detection, and a generic [camera model](https://github.com/hengli/camodocal).
