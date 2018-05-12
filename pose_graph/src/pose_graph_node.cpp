@@ -24,7 +24,7 @@ std::mutex m_process;
 int sequence = 1;
 PoseGraph posegraph;
 bool load_flag = 0;
-bool start_flag = 0;
+bool start_flag = 1;
 double SKIP_DIS = 0;
 int frame_cnt = 0;
 double t_agent = 0;
@@ -47,7 +47,7 @@ tf::TransformListener* listener;
 
 void agent_callback(const agent_msg::AgentMsgConstPtr &agent_msg)
 {
-    if(start_flag);
+    if(start_flag)
     {
         m_agent_msg_buf.lock();
         agent_msg_buf.push(agent_msg);

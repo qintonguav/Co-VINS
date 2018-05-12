@@ -1,6 +1,0 @@
-<launch>
-	<node pkg="rosbag" type="play" name="player1" output="log" args="/home/tony-ws1/bag/swarm_bag/swarm/1_vio.bag" />
-	<node pkg="rosbag" type="play" name="player2" output="log" args="/home/tony-ws1/bag/swarm_bag/swarm/2_vio.bag" />
-	<node pkg="rosbag" type="play" name="player3" output="log" args="/home/tony-ws1/bag/swarm_bag/swarm/3_vio.bag" />
-	<node pkg="rosbag" type="play" name="player4" output="log" args="/home/tony-ws1/bag/swarm_bag/swarm/4_vio.bag" />
-</launch>

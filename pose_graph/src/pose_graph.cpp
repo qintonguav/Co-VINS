@@ -42,12 +42,12 @@ void PoseGraph::addAgentFrame(KeyFrame* cur_kf)
         {
             sequence_align_world[sequence] = 1;
             first_sequence = sequence;
-            printf("first sequence %d align world %d\n", sequence, sequence_align_world[sequence]);
+            printf("first sequence %d \n", sequence);
         }
         else
         {
             sequence_align_world[sequence] = 0;
-            printf("new sequence %d align world %d\n", sequence, sequence_align_world[sequence]);
+            printf("new sequence %d \n", sequence);
         }
         sequence_t_drift_map[sequence] = Eigen::Vector3d(0, 0, 0);
         sequence_w_t_s_map[sequence] = Eigen::Vector3d(0, 0, 0);
@@ -81,11 +81,11 @@ void PoseGraph::addAgentFrame(KeyFrame* cur_kf)
             if (earliest_loop_index > loop_index || earliest_loop_index == -1)
                 earliest_loop_index = loop_index;
 
-            ROS_WARN("find conection %d --- %d", sequence, old_kf->sequence);
+            ROS_WARN("find overlap connection %d --- %d", sequence, old_kf->sequence);
             // shift vio pose of whole sequence to the world frame
             if (old_kf->sequence != cur_kf->sequence && sequence_align_world[sequence] == 0 && sequence_align_world[old_kf->sequence] == 1)
             {  
-                ROS_WARN("shift swquence %d according to %d", sequence, old_kf->sequence);
+                ROS_WARN("align %d sequence and %d sequence to world frame", sequence, old_kf->sequence);
                 sequence_align_world[sequence] = 1;
                 Vector3d w_P_old, w_P_cur, vio_P_cur;
                 Matrix3d w_R_old, w_R_cur, vio_R_cur;
@@ -127,7 +127,7 @@ void PoseGraph::addAgentFrame(KeyFrame* cur_kf)
             }
             if (old_kf->sequence != cur_kf->sequence && sequence_align_world[old_kf->sequence] == 0 && sequence_align_world[sequence] == 1)
             {  
-                ROS_WARN("shift swquence %d according to %d", old_kf->sequence, sequence);
+                ROS_WARN("align %d sequence and %d sequence to world frame", old_kf->sequence, sequence);
                 sequence_align_world[old_kf->sequence] = 1;
                 Vector3d w_P_old, w_P_cur, vio_P_old;
                 Matrix3d w_R_old, w_R_cur, vio_R_old;
@@ -289,12 +289,12 @@ void PoseGraph::loadKeyFrame(KeyFrame* cur_kf)
         {
             sequence_align_world[sequence] = 1;
             first_sequence = sequence;
-            printf("first sequence %d align world %d\n", sequence, sequence_align_world[sequence]);
+            printf("first sequence %d \n", sequence);
         }
         else
         {
             sequence_align_world[sequence] = 0;
-            printf("new sequence %d align world %d\n", sequence, sequence_align_world[sequence]);
+            printf("new sequence %d \n", sequence);
         }
         sequence_t_drift_map[sequence] = Eigen::Vector3d(0, 0, 0);
         sequence_w_t_s_map[sequence] = Eigen::Vector3d(0, 0, 0);

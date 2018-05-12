@@ -1,44 +1,48 @@
 <launch>
+    <arg name="sequence_1" default = "/home/tony-ws1/bag/ijrr_euroc_mav_dataset/MH_01_easy/MH_01_easy.bag" />
+    <arg name="sequence_2" default = "/home/tony-ws1/bag/ijrr_euroc_mav_dataset/MH_02_easy/MH_02_easy.bag" />
+    <arg name="sequence_3" default = "/home/tony-ws1/bag/ijrr_euroc_mav_dataset/MH_03_medium/MH_03_medium.bag" />
  
-    <group ns="agent1">
-    <include file="$(find vins_estimator)/launch/agent.launch">
-        <arg name="config_path" default = "$(find feature_tracker)/../config/euroc/euroc_config.yaml" />
-        <arg name="vins_path" default = "$(find feature_tracker)/../config/../" />
-        <arg name="agent_serial" value="1" /> 
-    </include>
-    <arg name="sequence_name" default = "MH_02_easy" />
+    <group ns="vins_1">
+    <param name="config_file" type="string" value="$(find feature_tracker)/../config/euroc/euroc_config.yaml" />
+    <param name="vins_folder" type="string" value="$(find feature_tracker)/../config/../" />
+    <param name="agent_num" type="int" value="1" />
+    <node name="feature_tracker" pkg="feature_tracker" type="feature_tracker" output="log"/>
+    <node name="vins_estimator" pkg="vins_estimator" type="vins_estimator" output="log"/>
     <node pkg="rosbag" type="play" name="player" output="log" 
-    args="/home/tony-ws1/bag/ijrr_euroc_mav_dataset/$(arg sequence_name)/$(arg sequence_name).bag  /imu0:=imu0 /cam0/image_raw:=cam0/image_raw" />
+    args="$(arg sequence_1)  /imu0:=imu0 /cam0/image_raw:=cam0/image_raw" />
     </group>
 
-<!--     <group ns="agent2">
-    <include file="$(find vins_estimator)/launch/agent.launch">
-        <arg name="config_path" default = "$(find feature_tracker)/../config/euroc/euroc_config.yaml" />
-        <arg name="vins_path" default = "$(find feature_tracker)/../config/../" />
-        <arg name="agent_serial" value="2" /> 
-    </include>
-    <arg name="sequence_name" default = "MH_02_easy" />
+    <group ns="vins_2">
+    <param name="config_file" type="string" value="$(find feature_tracker)/../config/euroc/euroc_config.yaml" />
+    <param name="vins_folder" type="string" value="$(find feature_tracker)/../config/../" />
+    <param name="agent_num" type="int" value="2" />
+    <node name="feature_tracker" pkg="feature_tracker" type="feature_tracker" output="log"/>
+    <node name="vins_estimator" pkg="vins_estimator" type="vins_estimator" output="log"/>
     <node pkg="rosbag" type="play" name="player" output="log" 
-    args="/home/tony-ws1/bag/ijrr_euroc_mav_dataset/$(arg sequence_name)/$(arg sequence_name).bag  /imu0:=imu0 /cam0/image_raw:=cam0/image_raw" />
+    args="$(arg sequence_2)  /imu0:=imu0 /cam0/image_raw:=cam0/image_raw" />
     </group>
 
-    <group ns="agent3">
-    <include file="$(find vins_estimator)/launch/agent.launch">
-        <arg name="config_path" default = "$(find feature_tracker)/../config/euroc/euroc_config.yaml" />
-        <arg name="vins_path" default = "$(find feature_tracker)/../config/../" />
-        <arg name="agent_serial" value="3" /> 
-    </include>
-    <arg name="sequence_name" default = "MH_03_medium" />
+    <group ns="vins_3">
+    <param name="config_file" type="string" value="$(find feature_tracker)/../config/euroc/euroc_config.yaml" />
+    <param name="vins_folder" type="string" value="$(find feature_tracker)/../config/../" />
+    <param name="agent_num" type="int" value="3" />
+    <node name="feature_tracker" pkg="feature_tracker" type="feature_tracker" output="log"/>
+    <node name="vins_estimator" pkg="vins_estimator" type="vins_estimator" output="log"/>
     <node pkg="rosbag" type="play" name="player" output="log" 
-    args="/home/tony-ws1/bag/ijrr_euroc_mav_dataset/$(arg sequence_name)/$(arg sequence_name).bag  /imu0:=imu0 /cam0/image_raw:=cam0/image_raw" />
-    </group> -->
-    
-<!--     <arg name="config_path" default = "$(find feature_tracker)/../config/euroc/euroc_config.yaml" />
+    args="$(arg sequence_3)  /imu0:=imu0 /cam0/image_raw:=cam0/image_raw" />
+    </group>
+
+
     <node name="pose_graph" pkg="pose_graph" type="pose_graph" output="screen">
-        <param name="config_file" type="string" value="$(arg config_path)" />
         <param name="visualization_shift_x" type="int" value="0" />
         <param name="visualization_shift_y" type="int" value="0" />
         <param name="skip_cnt" type="int" value="0" />
         <param name="skip_dis" type="double" value="0" />
-    </node> -->
+        <param name="pose_graph_save_path" type="string" value="/home/ri/raw_data/pose_graph/" />
+        <param name="pose_graph_result_path" type="string" value="/home/tony-ws1/output/" />
+    </node>
+
+    <node name="rvizvisualisation" pkg="rviz" type="rviz" output="log" args="-d $(find vins_estimator)/../config/multi_agent_rviz.rviz" />
+
 </launch>

@@ -1,0 +1,82 @@
+%YAML:1.0
+
+#common parameters
+imu_topic: "dji_sdk_1/dji_sdk/imu"
+image_topic: "hcfox_1/image"
+output_path: "/home/nvidia/output/"
+
+#camera calibration 
+model_type: MEI
+camera_name: camera
+image_width: 752
+image_height: 480
+mirror_parameters:
+   xi: 1.9120666893497278e+00
+distortion_parameters:
+   k1: -1.2901107620269353e-01
+   k2: 4.6399429489952448e-01
+   p1: 1.3252369667634168e-03
+   p2: 7.5227425910445755e-04
+projection_parameters:
+   gamma1: 6.3182615469230950e+02
+   gamma2: 6.3123582860573163e+02
+   u0: 3.7657060858576244e+02
+   v0: 2.2702074653159582e+02
+# Extrinsic parameter between IMU and Camera.
+estimate_extrinsic: 1   # 0  Have an accurate extrinsic parameters. We will trust the following imu^R_cam, imu^T_cam, don't change it.
+                        # 1  Have an initial guess about extrinsic parameters. We will optimize around your initial guess.
+                        # 2  Don't know anything about extrinsic parameters. You don't need to give R,T. We will try to calibrate it. Do some rotation movement at beginning.                        
+#If you choose 0 or 1, you should write down the following matrix.
+#Rotation from camera frame to imu frame, imu^R_cam
+extrinsicRotation: !!opencv-matrix
+   rows: 3
+   cols: 3
+   dt: d
+   data: [ 5.6075828145143336e-02, -7.2159314759991836e-02,
+       9.9581551242748023e-01, -9.9782044945128112e-01,
+       -3.8796951305458682e-02, 5.3377403704616570e-02,
+       3.4782929069876567e-02, -9.9663826429791991e-01,
+       -7.4177611059871973e-02 ]
+extrinsicTranslation: !!opencv-matrix
+   rows: 3
+   cols: 1
+   dt: d
+   data: [ 7.7766363536769759e-02, 1.7519580132927693e-02,
+       -1.6725607824124328e-02 ]
+
+#featur traker paprameters
+max_cnt: 120            # max feature number in feature tracking
+min_dist: 30            # min distance between two features 
+freq: 10                # frequence (Hz) of publish tracking result. At least 10Hz for good estimation. If set 0, the frequence will be same as raw image 
+F_threshold: 3.0        # ransac threshold (pixel)
+show_track: 1           # publish tracking image as topic
+equalize: 0             # if image is too dark or light, trun on equalize to find enough features
+fisheye: 1              # if using fisheye, trun on it. A circle mask will be loaded to remove edge noisy points
+
+#optimization parameters
+max_solver_time: 0.04  # max solver itration time (ms), to guarantee real time
+max_num_iterations: 8   # max solver itrations, to guarantee real time
+keyframe_parallax: 10.0 # keyframe selection threshold (pixel)
+
+#imu parameters       The more accurate parameters you provide, the better performance
+acc_n: 0.2          # accelerometer measurement noise standard deviation. #0.2   0.04
+gyr_n: 0.04         # gyroscope measurement noise standard deviation.     #0.05  0.004
+acc_w: 0.0004         # accelerometer bias random work noise standard deviation.  #0.02
+gyr_w: 2.0e-5       # gyroscope bias random work noise standard deviation.     #4.0e-5
+g_norm: 9.805     # gravity magnitude
+
+
+#unsynchronization parameters
+estimate_td: 1                      # online estimate time offset between camera and imu
+td: 0.0                             # initial value of time offset. unit: s. readed image clock + td = real image clock (IMU clock)
+
+#rolling shutter parameters
+rolling_shutter: 0                  # 0: global shutter camera, 1: rolling shutter camera
+rolling_shutter_tr: 0               # unit: s. rolling shutter read out time per frame (from data sheet). 
+
+#visualization parameters
+save_image: 0                   # save image in pose graph for visualization prupose; you can close this function by setting 0 
+visualize_imu_forward: 0        # output imu forward propogation to achieve low latency and high frequence results
+visualize_camera_size: 0.4      # size of camera marker in RVIZ
+
+swarm_agent: 1

@@ -217,10 +217,10 @@ bool KeyFrame::findConnection(KeyFrame* old_kf)
 	    relative_yaw = Utility::normalizeAngle(Utility::R2ypr(origin_vio_R).x() - Utility::R2ypr(PnP_R_old).x());
 	    if (abs(relative_yaw) < 15.0 && relative_t.norm() < 2.0)
 	    {
-	    	printf("PNP relative\n");
-	    	cout << "inlier num " << matched_3d.size() << endl;
-	    	cout << "pnp relative_t " << relative_t.transpose() << endl;
-	    	cout << "pnp relative_yaw " << relative_yaw << endl;
+	    	//printf("PNP relative\n");
+	    	//cout << "inlier num " << matched_3d.size() << endl;
+	    	//cout << "pnp relative_t " << relative_t.transpose() << endl;
+	    	//cout << "pnp relative_yaw " << relative_yaw << endl;
 	    	has_loop = true;
 	    	loop_index = old_kf->index;
 	    	loop_info << relative_t.x(), relative_t.y(), relative_t.z(),
