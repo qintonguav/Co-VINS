@@ -43,7 +43,8 @@ Clone the repository and catkin_make: (If [VINS-Mono](https://github.com/HKUST-A
 Use your own computer as both multiple robots and ground station. Run several VIOs and pose graph optimization at the same time. (If you cannot run it in real time, it's ok. Because your computer serves as both multiple robots and ground station.)
 
 **3.1 Euroc dataset**
-3.1.1 Download [EuRoC MAV Dataset](http://projects.asl.ethz.ch/datasets/doku.php?id=kmavvisualinertialdatasets). Although it contains stereo cameras, we only use one camera. We run three sequences simultaneously and merge them in one global frame.
+
+3.1.1 Download [EuRoC MAV Dataset](http://projects.asl.ethz.ch/datasets/doku.php?id=kmavvisualinertialdatasets). Although it contains stereo cameras, we only use one camera. We run multiple sequences simultaneously and merge them in one global frame.
 
 3.1.2 Modify the dataset path in the launch file (vins_estimator/launch/euroc_multi_agent.launch)
 ```
@@ -59,8 +60,11 @@ roslaunch vins_estimator euroc_multi_agent.launch
 ![euroc result](https://github.com/qintonguav/Co-VINS/blob/vins_swarm/support_files/image/euroc_result.png "euroc result")
 
 **3.2 Our data (video)**
+
 Reproduction of part II in video.
+
 3.2.1 Download [Our Data](https://www.dropbox.com/sh/o20itggdn3bgiow/AABxHkz4aWPnRAHzTuORXQnCa?dl=0). 
+
 3.2.2 Modify the dataset path in the launch file (vins_estimator/launch/A3_swarm.launch)
 ```
 <arg name="sequence_1" default = "YOUR_PATH/1.bag" />
