@@ -271,6 +271,12 @@ void odom_callback(const nav_msgs::Odometry::ConstPtr& msg)
         meshROS.color.g = 1.0;
         meshROS.color.b = 1.0;
     }
+    else if(sequence == 5)
+    {
+        meshROS.color.r = 0.0;
+        meshROS.color.g = 0.5;
+        meshROS.color.b = 1.0;
+    }
 
     meshROS.mesh_resource = mesh_resource;
     meshPub.publish(meshROS);  

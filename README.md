@@ -15,7 +15,7 @@ alt="Swarm application" width="240" height="180" border="10" /></a>
 * **Technical report: Collaborative Localization for Multiple Monocular Vision-Based MAVs**, Tong Qin, William Wu, Shaojie Shen [Technical report](https://github.com/qintonguav/Co-VINS/blob/vins_swarm/support_files/paper/co_vins_report.pdf) 
 
 
-## 1. Prerequisites
+## 1. Prerequisites 
 1.1 **Ubuntu** and **ROS**
 Ubuntu  16.04.
 ROS Kinetic. [ROS Installation](http://wiki.ros.org/ROS/Installation)
@@ -40,7 +40,7 @@ Clone the repository and catkin_make: (If [VINS-Mono](https://github.com/HKUST-A
 ```
 
 ## 3. Run datasets
-Use your own computer as both multiple robots and ground station. Run several VIOs and pose graph optimization at the same time. 
+Use your own computer as both multiple robots and ground station. Run several VIOs and pose graph optimization at the same time. (If you cannot run it in real time, it's ok. Because your computer serves as both multiple robots and ground station.)
 
 **3.1 Euroc dataset**
 3.1.1 Download [EuRoC MAV Dataset](http://projects.asl.ethz.ch/datasets/doku.php?id=kmavvisualinertialdatasets). Although it contains stereo cameras, we only use one camera. We run three sequences simultaneously and merge them in one global frame.
@@ -76,7 +76,7 @@ roslaunch vins_estimator A3_swarm.launch
 ## 4. Acknowledgements
 We use [ceres solver](http://ceres-solver.org/) for non-linear optimization and [DBoW2](https://github.com/dorian3d/DBoW2) for loop detection, and a generic [camera model](https://github.com/hengli/camodocal).
 
-## 5. Licence
+## 5. License
 The source code is released under [GPLv3](http://www.gnu.org/licenses/) license.
 
 We are still working on improving the code reliability. For any technical issues, please contact Tong QIN <tong.qinATconnect.ust.hk>.
