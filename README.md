@@ -4,7 +4,7 @@
 Co-VINS a collaborative localization framework for multiple robots using monocular visual-inertial systems (VINS). Unlike traditional swarm applications which rely on external position equipment (GPS or Motion Capture System), our system achieves globally consistent localization based on internal sensors (onboard camera and IMU). Each robot is equipped with one camera and one IMU. It estimates own pose onboard and sends visual information to a centralized ground station. The ground station collects collaborative information from all robots, and maintains a globally consistent coordinate by pose graph optimization. Then the global localization is feedbacked to each robot for global control purpose. The ground station not only aligns all robots in a global coordinate, but also correct accumulated drifts for each robot. Co-VINS is an extension of [VINS-Mono](https://github.com/HKUST-Aerial-Robotics/VINS-Mono).
 
 
-**Authors:** [Tong Qin](http://www.qintonguav.com/), [William Wu](https://github.com/justwillim),  and [Shaojie Shen](http://www.ece.ust.hk/ece.php/profile/facultydetail/eeshaojie) from the [HUKST Aerial Robotics Group](http://uav.ust.hk/)
+**Authors:** [Tong Qin](http://www.qintonguav.com/), [William Wu](https://github.com/justwillim),  and [Shaojie Shen](http://www.ece.ust.hk/ece.php/profile/facultydetail/eeshaojie) from [HUKST Aerial Robotics Group](http://uav.ust.hk/)
 
 **Videos:**
 
@@ -12,7 +12,7 @@ Co-VINS a collaborative localization framework for multiple robots using monocul
 alt="Swarm application" width="240" height="180" border="10" /></a>
 
 **Related Papers**
-* **Technical report: Collaborative Localization for Multiple Monocular Vision-Based MAVs**, Tong Qin, William Wu, Shaojie Shen [Technical report](https://arxiv.org/abs/1708.03852v1) 
+* **Technical report: Collaborative Localization for Multiple Monocular Vision-Based MAVs**, Tong Qin, William Wu, Shaojie Shen [Technical report](https://github.com/qintonguav/Co-VINS/blob/vins_swarm/support_files/paper/co_vins_report.pdf) 
 
 
 ## 1. Prerequisites
@@ -30,7 +30,7 @@ Follow [Ceres Installation](http://ceres-solver.org/installation.html), remember
 (Our testing environment: Ubuntu 16.04, ROS Kinetic, OpenCV 3.3.1, Eigen 3.3.3) 
 
 ## 2. Build Co-VINS on ROS
-Clone the repository and catkin_make:
+Clone the repository and catkin_make: (If [VINS-Mono](https://github.com/HKUST-Aerial-Robotics/VINS-Mono) exists in your workspace, please remove it first)
 ```
     cd ~/catkin_ws/src
     git clone https://github.com/qintonguav/Co-VINS.git
